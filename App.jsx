@@ -1,156 +1,88 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function App() {
+  const backendURL = 'https://resale-charleston-app.onrender.com';
+  const [activeTab, setActiveTab] = useState('customer');
+  const [inventory, setInventory] = useState([]);
   const [title, setTitle] = useState('');
   const [owner, setOwner] = useState('');
-  const [photo, setPhoto] = useState(null);
-  const [salePrice, setSalePrice] = useState('');
-  const [payout, setPayout] = useState('');
-  const [paymentType, setPaymentType] = useState('');
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [price, setPrice] = useState('');
 
-  // Set the backend URL (from Render) dynamically via environment variable
-  const backendURL = "https://rc-backend-b307.onrender.com";  // Update with your backend URL
-
-  // Function to handle analyzing the item
-  const handleAnalyze = async () => {
-    setLoading(true);
-    try {
-      // Request to backend for AI analysis of the item title
-      const analyzeRes = await axios.post(`${backendURL}/api/analyze`, {
-        title
-      });
-
-      // Request to backend for generating a QR code
-      const qrRes = await axios.post(`${backendURL}/api/qrcode`, {
-        title
-      });
-
-      // Set result with the response data from backend
-      setResult({
-        ...analyzeRes.data,
-        qr: qrRes.data.url,
-        id: `RC-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-        title,
-        owner,
-        intakeDate: new Date().toLocaleDateString()
-      });
-    } catch (err) {
-      alert('Error analyzing item.');
+  useEffect(() => {
+    if (activeTab === 'customer') {
+      axios.get(`${backendURL}/api/items`)
+        .then(r => setInventory(r.data))
+        .catch(console.error);
     }
-    setLoading(false);
+  }, [activeTab]);
+
+  const handleAddItem = () => {
+    const newItem = { title, owner, price: Number(price), sold: false };
+    axios.post(`${backendURL}/api/items`, newItem)
+      .then(() => {
+        setTitle('');
+        setOwner('');
+        setPrice('');
+        setInventory(prev => [...prev, newItem]);
+      })
+      .catch(console.error);
   };
 
-  // Function to handle submitting the data to the backend
-  const handleSubmit = async () => {
-    try {
-      // Post the data to the backend
-      await axios.post(`${backendURL}/api/sync`, {
-        ...result,
-        salePrice,
-        payout,
-        profit: Number(salePrice) - Number(payout),
-        paymentType,
-        dateSold: new Date().toLocaleDateString()
+  const toggleSold = (id) => {
+    axios.put(`${backendURL}/api/items/${id}/sold`)
+      .then(() => {
+        setInventory(prev => prev.map(item =>
+          item.id === id ? { ...item, sold: !item.sold } : item
+        ));
       });
-      alert('✅ Submitted to Google Sheet!');
-    } catch (err) {
-      alert('❌ Error submitting to Google Sheet.');
-    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-slate-100 flex flex-col items-center justify-center p-4">
-      <div className="text-center mb-4">
-        <h1 className="text-3xl font-bold text-emerald-700">Resale Charleston</h1>
-        <p className="text-gray-600">Find the best deals on furniture & decor!</p>
+    <div className="min-h-screen flex flex-col">
+      <div className="flex justify-center space-x-4 p-4 bg-gray-200">
+        <button onClick={() => setActiveTab('customer')} className="px-4 py-2 bg-white rounded">Customer</button>
+        <button onClick={() => setActiveTab('admin')} className="px-4 py-2 bg-white rounded">Admin</button>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-md max-w-md w-full">
-        <h2 className="text-xl font-semibold mb-4 text-center">Item Intake</h2>
-        
-        {/* Input for Item Title */}
-        <input
-          type="text"
-          placeholder="Item Title"
-          className="w-full p-2 mb-3 border rounded"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-        />
-        
-        {/* Input for Owner */}
-        <input
-          type="text"
-          placeholder="Owner Name"
-          className="w-full p-2 mb-3 border rounded"
-          value={owner}
-          onChange={e => setOwner(e.target.value)}
-        />
-        
-        {/* Input for Item Photo */}
-        <input
-          type="file"
-          className="w-full p-2 mb-3"
-          onChange={e => setPhoto(e.target.files[0])}
-        />
-        
-        {/* Analyze Button */}
-        <button
-          onClick={handleAnalyze}
-          className="bg-emerald-600 text-white w-full py-2 rounded hover:bg-emerald-700"
-          disabled={loading}
-        >
-          {loading ? 'Analyzing...' : 'Analyze Item'}
-        </button>
+      {activeTab === 'customer' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
+          {inventory.length === 0 
+            ? <p>Come back soon—more items are loading.</p>
+            : inventory.map(item => (
+                <div key={item.id} className="bg-white shadow rounded p-4">
+                  <h3 className="font-semibold">{item.title}</h3>
+                  <p className="text-gray-600">${item.price}</p>
+                  <p className="text-sm text-red-500">{item.sold ? 'Sold' : ''}</p>
+                </div>
+              ))
+          }
+        </div>
+      )}
 
-        {result && (
-          <div className="mt-6">
-            {/* Display Item Analysis Results */}
-            <div className="font-semibold text-lg">Item ID: <span className="text-gray-700">{result.id}</span></div>
-            <div className="text-gray-700 mb-2">Owner: {result.owner} | Intake Date: {result.intakeDate}</div>
-            <div className="border p-3 rounded bg-slate-50">
-              <p><strong>Title:</strong> {result.title}</p>
-              <p><strong>Description:</strong> {result.description}</p>
-              <p><strong>Estimated Value:</strong> ${result.value}</p>
-              <p><strong>Tags:</strong> {result.tags?.join(', ')}</p>
-              <p><strong>QR Link:</strong> <a href={result.qr} className="text-blue-600 underline" target="_blank">{result.qr}</a></p>
-            </div>
+      {activeTab === 'admin' && (
+        <div className="p-6 space-y-4">
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" className="border p-2 w-full"/>
+          <input value={owner} onChange={e => setOwner(e.target.value)} placeholder="Owner" className="border p-2 w-full"/>
+          <input value={price} onChange={e => setPrice(e.target.value)} placeholder="Price" type="number" className="border p-2 w-full"/>
+          <button onClick={handleAddItem} className="bg-blue-500 text-white px-4 py-2 rounded">Add Item</button>
 
-            {/* Inputs for Sale Information */}
-            <input
-              type="text"
-              placeholder="Sale Price"
-              className="w-full p-2 my-2 border rounded"
-              value={salePrice}
-              onChange={e => setSalePrice(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Owner Payout"
-              className="w-full p-2 my-2 border rounded"
-              value={payout}
-              onChange={e => setPayout(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Payment Type (Cash, Venmo...)"
-              className="w-full p-2 my-2 border rounded"
-              value={paymentType}
-              onChange={e => setPaymentType(e.target.value)}
-            />
-
-            {/* Submit Button */}
-            <button
-              onClick={handleSubmit}
-              className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-            >
-              Submit Item to Sheet
-            </button>
+          <div className="pt-4">
+            <h2 className="font-bold">All Items</h2>
+            {inventory.map(item => (
+              <div key={item.id} className="flex justify-between items-center p-2 border">
+                <div>
+                  {item.title} - ${item.price}
+                </div>
+                <button onClick={() => toggleSold(item.id)} className="text-xs bg-gray-300 px-2 py-1 rounded">
+                  {item.sold ? 'Mark Unsold' : 'Mark Sold'}
+                </button>
+              </div>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
