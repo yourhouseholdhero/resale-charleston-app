@@ -1,9 +1,21 @@
-
 import React, { useState } from 'react';
 import AdminPanel from './AdminPanel';
+import OwnerProfiles from './OwnerProfiles';
+import SalesReports from './SalesReports';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('customer');
+  const [subTab, setSubTab] = useState('main');
+  const [password, setPassword] = useState('');
+  const [authenticated, setAuthenticated] = useState(false);
+
+  const handlePasswordSubmit = () => {
+    if (password === 'MaryPopp!ns1') {
+      setAuthenticated(true);
+    } else {
+      alert('Incorrect password');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -17,7 +29,49 @@ export default function App() {
 
         {currentTab === 'admin' && (
           <div className="p-4">
-            <AdminPanel />
+            {!authenticated ? (
+              <div className="text-center">
+                <input
+                  type="password"
+                  placeholder="Enter Admin Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="border p-2 rounded"
+                />
+                <button
+                  onClick={handlePasswordSubmit}
+                  className="ml-2 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
+                >
+                  Login
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex space-x-2 mb-4">
+                  <button
+                    onClick={() => setSubTab('main')}
+                    className={`px-3 py-1 rounded ${subTab === 'main' ? 'bg-emerald-600 text-white' : 'bg-gray-300'}`}
+                  >
+                    Admin Panel
+                  </button>
+                  <button
+                    onClick={() => setSubTab('owners')}
+                    className={`px-3 py-1 rounded ${subTab === 'owners' ? 'bg-emerald-600 text-white' : 'bg-gray-300'}`}
+                  >
+                    Owner Profiles
+                  </button>
+                  <button
+                    onClick={() => setSubTab('sales')}
+                    className={`px-3 py-1 rounded ${subTab === 'sales' ? 'bg-emerald-600 text-white' : 'bg-gray-300'}`}
+                  >
+                    Sales Reports
+                  </button>
+                </div>
+                {subTab === 'main' && <AdminPanel />}
+                {subTab === 'owners' && <OwnerProfiles />}
+                {subTab === 'sales' && <SalesReports />}
+              </>
+            )}
           </div>
         )}
       </div>
