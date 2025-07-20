@@ -1,115 +1,67 @@
 
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 
 export default function AdminPanel() {
-  const [title, setTitle] = useState('');
-  const [ownerType, setOwnerType] = useState('resale');
-  const [percentSplit, setPercentSplit] = useState('');
-  const [pricePaid, setPricePaid] = useState('');
-  const [photos, setPhotos] = useState([]);
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState(() => {
+    const stored = localStorage.getItem('rc_items');
+    return stored ? JSON.parse(stored) : [];
+  });
 
-  const handlePhotoUpload = (e) => {
-    setPhotos(Array.from(e.target.files).slice(0, 10));
+  const [form, setForm] = useState({
+    title: '', owner: '', split: '', price: '', description: '',
+    photos: [], sold: false, paid: false, cost: ''
+  });
+
+  useEffect(() => {
+    localStorage.setItem('rc_items', JSON.stringify(items));
+  }, [items]);
+
+  const addItem = () => {
+    const id = `RC-${Date.now()}`;
+    const profit = form.sold
+      ? form.owner.toLowerCase().includes('resale')
+        ? parseFloat(form.price) - parseFloat(form.cost)
+        : parseFloat(form.price) * ((100 - parseFloat(form.split)) / 100)
+      : 0;
+    setItems([...items, { ...form, id, profit }]);
+    setForm({ title: '', owner: '', split: '', price: '', description: '', photos: [], sold: false, paid: false, cost: '' });
   };
 
-  const handleAnalyze = async () => {
-    setLoading(true);
-    try {
-      const analyzeRes = await axios.post('https://resale-charleston-app.onrender.com/api/analyze', {
-        title
-      });
-      setResult({
-        ...analyzeRes.data,
-        title,
-        ownerType,
-        percentSplit,
-        pricePaid,
-        photos,
-        intakeDate: new Date().toLocaleDateString()
-      });
-    } catch (err) {
-      alert('Error analyzing item.');
-    }
-    setLoading(false);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      await axios.post('https://resale-charleston-app.onrender.com/api/items', {
-        ...result
-      });
-      alert('✅ Submitted to inventory!');
-    } catch (err) {
-      alert('❌ Error submitting item.');
-    }
+  const updateItem = (id, field, value) => {
+    setItems(items.map(item => item.id === id ? { ...item, [field]: value } : item));
   };
 
   return (
-    <div className="p-4 max-w-xl mx-auto bg-white rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Admin Intake Form</h2>
-      <input
-        type="text"
-        placeholder="Item Title"
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-        className="w-full mb-2 p-2 border rounded"
-      />
-      <div className="mb-2">
-        <label className="mr-2">Owner Type:</label>
-        <select value={ownerType} onChange={e => setOwnerType(e.target.value)} className="p-1 border rounded">
-          <option value="resale">Resale Charleston</option>
-          <option value="consignor">Consignor</option>
-        </select>
-      </div>
-      {ownerType === 'consignor' ? (
-        <input
-          type="number"
-          placeholder="Consignor % Split (e.g. 50)"
-          value={percentSplit}
-          onChange={e => setPercentSplit(e.target.value)}
-          className="w-full mb-2 p-2 border rounded"
-        />
-      ) : (
-        <input
-          type="number"
-          placeholder="Price Paid by Resale Charleston"
-          value={pricePaid}
-          onChange={e => setPricePaid(e.target.value)}
-          className="w-full mb-2 p-2 border rounded"
-        />
-      )}
-      <input
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={handlePhotoUpload}
-        className="w-full mb-2"
-      />
-      <button
-        onClick={handleAnalyze}
-        disabled={loading}
-        className="w-full mb-4 p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        {loading ? 'Analyzing...' : 'Analyze Item'}
-      </button>
-
-      {result && (
-        <div className="bg-gray-100 p-3 rounded">
-          <h3 className="font-bold mb-2">AI Results:</h3>
-          <p><strong>Description:</strong> {result.description}</p>
-          <p><strong>Estimated Value:</strong> ${result.value}</p>
-          <p><strong>Tags:</strong> {result.tags?.join(', ')}</p>
-          <button
-            onClick={handleSubmit}
-            className="mt-4 w-full p-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Submit Item to Inventory
-          </button>
+    <div className="space-y-4">
+      <div className="bg-white p-4 rounded shadow">
+        <h2 className="text-lg font-bold mb-2">Add New Item</h2>
+        <input className="border p-2 w-full mb-1" placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+        <input className="border p-2 w-full mb-1" placeholder="Owner" value={form.owner} onChange={e => setForm({ ...form, owner: e.target.value })} />
+        <input className="border p-2 w-full mb-1" placeholder="Percent Split (if not resale)" value={form.split} onChange={e => setForm({ ...form, split: e.target.value })} />
+        <input className="border p-2 w-full mb-1" placeholder="Price" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+        <input className="border p-2 w-full mb-1" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+        <input className="border p-2 w-full mb-1" placeholder="Cost (if owned)" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} />
+        <div className="mb-1">
+          <label className="mr-2">Sold</label>
+          <input type="checkbox" checked={form.sold} onChange={e => setForm({ ...form, sold: e.target.checked })} />
         </div>
-      )}
+        <button onClick={addItem} className="bg-emerald-600 text-white py-2 px-4 rounded">Add Item</button>
+      </div>
+
+      {items.map(item => (
+        <div key={item.id} className="bg-white p-4 rounded shadow">
+          <div className="text-lg font-bold">{item.title} <span className="text-gray-500 text-sm">({item.id})</span></div>
+          <div className="text-sm text-gray-600">Owner: {item.owner} | ${item.price}</div>
+          <div className="text-sm">{item.description}</div>
+          <div className="mt-1 text-xs text-gray-500">Sold: {item.sold ? 'Yes' : 'No'} | Paid: {item.paid ? 'Yes' : 'No'} | Profit: ${item.profit?.toFixed(2)}</div>
+          <div className="mt-1 flex space-x-2">
+            <label>Mark Sold</label>
+            <input type="checkbox" checked={item.sold} onChange={e => updateItem(item.id, 'sold', e.target.checked)} />
+            <label>Mark Paid</label>
+            <input type="checkbox" checked={item.paid} onChange={e => updateItem(item.id, 'paid', e.target.checked)} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
