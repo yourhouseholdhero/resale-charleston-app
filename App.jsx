@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import Storefront from './components/Storefront.jsx';
-import AdminPanel from './components/AdminPanel.jsx';
-import InventoryView from './components/InventoryView.jsx';
-import AddItem from './components/AddItem.jsx';
-import OwnerProfiles from './components/OwnerProfiles.jsx';
-import SalesReport from './components/SalesReport.jsx';
+import Storefront from './components/Storefront';
+import AdminPanel from './components/AdminPanel';
+import InventoryView from './components/InventoryView';
+import AddItem from './components/AddItem';
+import OwnerProfiles from './components/OwnerProfiles';
+import SalesReport from './components/SalesReport';
 
 export default function App() {
-  const [tab, setTab] = useState('storefront.jsx');
+  const [tab, setTab] = useState('storefront');
   const [authenticated, setAuthenticated] = useState(false);
 
   const handlePassword = () => {
@@ -17,7 +17,7 @@ export default function App() {
 
   return (
     <div className="container">
-      {tab === 'storefront' && <Storefront.jsx />}
+      {tab === 'storefront' && <Storefront />}
       {tab === 'admin' && !authenticated && (
         <button onClick={handlePassword}>Enter Admin Area</button>
       )}
