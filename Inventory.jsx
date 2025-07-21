@@ -1,97 +1,68 @@
-
 import React, { useState } from 'react';
 
-export default function OwnerProfiles() {
-  const [owners, setOwners] = useState([]);
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    split: ''
-  });
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+export default function Inventory({ inventory, setInventory }) {
+  const handleMarkSold = (id, priceSold) => {
+    const updated = inventory.map(item =>
+      item.id === id ? { ...item, sold: true, dateSold: new Date().toLocaleDateString(), soldPrice: priceSold } : item
+    );
+    setInventory(updated);
+    localStorage.setItem("inventory", JSON.stringify(updated));
   };
 
-  const handleAddOwner = () => {
-    if (!form.firstName || !form.lastName || !form.phone || !form.split) {
-      alert("First Name, Last Name, Phone and Split % are required.");
-      return;
-    }
-    setOwners([...owners, form]);
-    setForm({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      split: ''
-    });
-  };
+  const [saleInput, setSaleInput] = useState({});
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Add Owner Profile</h2>
-      <div className="grid gap-3 max-w-md">
-        <input
-          name="firstName"
-          placeholder="First Name"
-          className="p-2 border rounded"
-          value={form.firstName}
-          onChange={handleChange}
-        />
-        <input
-          name="lastName"
-          placeholder="Last Name"
-          className="p-2 border rounded"
-          value={form.lastName}
-          onChange={handleChange}
-        />
-        <input
-          name="email"
-          placeholder="Email"
-          className="p-2 border rounded"
-          value={form.email}
-          onChange={handleChange}
-        />
-        <input
-          name="phone"
-          placeholder="Phone Number"
-          className="p-2 border rounded"
-          value={form.phone}
-          onChange={handleChange}
-        />
-        <input
-          name="split"
-          placeholder="Percent Split (e.g. 50)"
-          className="p-2 border rounded"
-          type="number"
-          value={form.split}
-          onChange={handleChange}
-        />
-        <button
-          onClick={handleAddOwner}
-          className="bg-green-600 text-white py-2 rounded hover:bg-green-700"
-        >
-          Add Owner
-        </button>
-      </div>
+    <div className="p-4 space-y-4">
+      <h2 className="text-2xl font-semibold mb-4">Inventory</h2>
 
-      <div className="mt-6">
-        <h3 className="text-lg font-bold mb-2">Owner List</h3>
-        {owners.length === 0 ? (
-          <p>No owners added yet.</p>
-        ) : (
-          <ul className="space-y-2">
-            {owners.map((owner, i) => (
-              <li key={i} className="p-3 border rounded bg-white shadow-sm">
-                {owner.firstName} {owner.lastName} – {owner.phone} ({owner.split}% split)
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {inventory.length === 0 && <p>No items in inventory yet.</p>}
+
+      {inventory
+        .sort((a, b) => a.sold === b.sold ? 0 : a.sold ? 1 : -1)
+        .map((item, i) => (
+          <div key={i} className={`border p-4 rounded shadow-sm ${item.sold ? 'bg-red-50' : 'bg-white'}`}>
+            <div className="flex space-x-4 overflow-x-auto mb-2">
+              {item.imageUrls?.map((img, idx) => (
+                <img key={idx} src={img} alt={`Item ${i}`} className="w-32 h-32 object-cover rounded" />
+              ))}
+            </div>
+            <h3 className="text-xl font-bold">{item.title}</h3>
+            <p>{item.description}</p>
+            <p><strong>Price:</strong> ${item.price}</p>
+            <p><strong>Owner:</strong> {item.owner}</p>
+            <p><strong>Date Added:</strong> {item.dateAdded}</p>
+            {item.sold && (
+              <>
+                <p className="text-red-600 font-semibold">Sold for ${item.soldPrice}</p>
+                <p className="text-sm">Sold on: {item.dateSold}</p>
+              </>
+            )}
+
+            {!item.sold && (
+              <div className="mt-3">
+                <input
+                  type="number"
+                  placeholder="Sold Price"
+                  className="border p-2 rounded w-full mb-2"
+                  value={saleInput[item.id] || ''}
+                  onChange={(e) =>
+                    setSaleInput({ ...saleInput, [item.id]: e.target.value })
+                  }
+                />
+                <button
+                  onClick={() => {
+                    const priceSold = saleInput[item.id];
+                    if (!priceSold) return alert("Please enter sold price");
+                    handleMarkSold(item.id, priceSold);
+                  }}
+                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                >
+                  Mark as Sold
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
     </div>
   );
 }
