@@ -1,97 +1,47 @@
-
 import React, { useState } from 'react';
 
-export default function OwnerProfiles() {
-  const [owners, setOwners] = useState([]);
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    split: ''
-  });
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleAddOwner = () => {
-    if (!form.firstName || !form.lastName || !form.phone || !form.split) {
-      alert("First Name, Last Name, Phone and Split % are required.");
-      return;
-    }
-    setOwners([...owners, form]);
-    setForm({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      split: ''
-    });
-  };
+export default function OwnerProfiles({ owners }) {
+  const [selectedOwner, setSelectedOwner] = useState(null);
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Add Owner Profile</h2>
-      <div className="grid gap-3 max-w-md">
-        <input
-          name="firstName"
-          placeholder="First Name"
-          className="p-2 border rounded"
-          value={form.firstName}
-          onChange={handleChange}
-        />
-        <input
-          name="lastName"
-          placeholder="Last Name"
-          className="p-2 border rounded"
-          value={form.lastName}
-          onChange={handleChange}
-        />
-        <input
-          name="email"
-          placeholder="Email"
-          className="p-2 border rounded"
-          value={form.email}
-          onChange={handleChange}
-        />
-        <input
-          name="phone"
-          placeholder="Phone Number"
-          className="p-2 border rounded"
-          value={form.phone}
-          onChange={handleChange}
-        />
-        <input
-          name="split"
-          placeholder="Percent Split (e.g. 50)"
-          className="p-2 border rounded"
-          type="number"
-          value={form.split}
-          onChange={handleChange}
-        />
-        <button
-          onClick={handleAddOwner}
-          className="bg-green-600 text-white py-2 rounded hover:bg-green-700"
-        >
-          Add Owner
-        </button>
+    <div className="p-4 space-y-4">
+      <h2 className="text-xl font-bold text-center">Owner Profiles</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {owners.map((owner, index) => (
+          <div
+            key={index}
+            className="border rounded p-4 shadow hover:bg-slate-50 cursor-pointer"
+            onClick={() => setSelectedOwner(owner)}
+          >
+            <h3 className="text-lg font-semibold">{owner.firstName} {owner.lastName}</h3>
+            <p>{owner.email}</p>
+            <p>{owner.phone}</p>
+            <p><strong>Split:</strong> {owner.split}%</p>
+          </div>
+        ))}
       </div>
 
-      <div className="mt-6">
-        <h3 className="text-lg font-bold mb-2">Owner List</h3>
-        {owners.length === 0 ? (
-          <p>No owners added yet.</p>
-        ) : (
-          <ul className="space-y-2">
-            {owners.map((owner, i) => (
-              <li key={i} className="p-3 border rounded bg-white shadow-sm">
-                {owner.firstName} {owner.lastName} – {owner.phone} ({owner.split}% split)
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {selectedOwner && (
+        <div className="mt-6 bg-white p-4 rounded shadow border">
+          <h3 className="text-lg font-bold mb-2">Items from {selectedOwner.firstName}</h3>
+          {selectedOwner.items && selectedOwner.items.length > 0 ? (
+            <div className="space-y-2">
+              {selectedOwner.items.map((item, i) => (
+                <div key={i} className="border p-3 rounded bg-gray-50">
+                  <p><strong>Title:</strong> {item.title}</p>
+                  <p><strong>Price:</strong> ${item.price}</p>
+                  <p><strong>Sold:</strong> {item.sold ? 'Yes' : 'No'}</p>
+                  {item.sold && <p><strong>Sold Price:</strong> ${item.soldPrice}</p>}
+                  <p><strong>Owed:</strong> ${item.owed}</p>
+                  <p><strong>Paid:</strong> {item.paid ? '✅' : '❌'}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>No items linked to this owner.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
