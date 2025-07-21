@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default function SalesReport() {
-  return <div>📈 Monthly Profit & Sales Breakdown</div>;
+  return <div>Sales Breakdown</div>;
 }

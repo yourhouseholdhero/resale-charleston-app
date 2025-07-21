@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default function OwnerProfiles() {
-  return <div>👤 Owner Profiles (linked to items)</div>;
+  return <div>Owner Profiles List</div>;
 }

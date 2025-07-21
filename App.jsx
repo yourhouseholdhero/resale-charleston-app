@@ -8,30 +8,23 @@ import SalesReport from './components/SalesReport';
 
 export default function App() {
   const [tab, setTab] = useState('storefront');
-  const [authenticated, setAuthenticated] = useState(false);
-
-  const handlePassword = () => {
-    const pw = prompt('Enter admin password');
-    if (pw === 'admin123') setAuthenticated(true);
-  };
 
   return (
-    <div className="container">
+    <div className="container mx-auto p-4">
       {tab === 'storefront' && <Storefront />}
-      {tab === 'admin' && !authenticated && (
-        <button onClick={handlePassword}>Enter Admin Area</button>
-      )}
-      {tab === 'admin' && authenticated && (
-        <>
-          <InventoryView />
-          <AddItem />
-          <OwnerProfiles />
-          <SalesReport />
-        </>
-      )}
-      <div className="tab-bar">
+      {tab === 'admin' && <AdminPanel />}
+      {tab === 'inventory' && <InventoryView />}
+      {tab === 'add' && <AddItem />}
+      {tab === 'owners' && <OwnerProfiles />}
+      {tab === 'sales' && <SalesReport />}
+
+      <div className="flex space-x-2 mt-6">
         <button onClick={() => setTab('storefront')}>Storefront</button>
         <button onClick={() => setTab('admin')}>Admin</button>
+        <button onClick={() => setTab('inventory')}>Inventory</button>
+        <button onClick={() => setTab('add')}>Add Item</button>
+        <button onClick={() => setTab('owners')}>Owners</button>
+        <button onClick={() => setTab('sales')}>Sales</button>
       </div>
     </div>
   );
