@@ -1,20 +1,33 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-export default function OwnerForm({ onAddOwner }) {
-  const [owner, setOwner] = useState({ name: '', phone: '', address: '', split: '' });
-
-  const handleSubmit = () => {
-    onAddOwner(owner);
-    setOwner({ name: '', phone: '', address: '', split: '' });
-  };
-
+export default function OwnerForm({ form, onChange, onSubmit, editing }) {
   return (
-    <div>
-      <input placeholder="Name" value={owner.name} onChange={e => setOwner({...owner, name: e.target.value})} />
-      <input placeholder="Phone" value={owner.phone} onChange={e => setOwner({...owner, phone: e.target.value})} />
-      <input placeholder="Address" value={owner.address} onChange={e => setOwner({...owner, address: e.target.value})} />
-      <input placeholder="% Split" value={owner.split} onChange={e => setOwner({...owner, split: e.target.value})} />
-      <button onClick={handleSubmit}>Add Owner</button>
-    </div>
+    <form onSubmit={onSubmit} className="mb-6 space-y-3">
+      <input
+        name="name"
+        value={form.name}
+        onChange={onChange}
+        placeholder="Owner Name"
+        className="border p-2 w-full"
+        required
+      />
+      <input
+        name="contact"
+        value={form.contact}
+        onChange={onChange}
+        placeholder="Contact Info"
+        className="border p-2 w-full"
+      />
+      <input
+        name="image"
+        value={form.image}
+        onChange={onChange}
+        placeholder="Image URL"
+        className="border p-2 w-full"
+      />
+      <button type="submit" className="bg-blue-500 text-white px-4 py-2">
+        {editing ? 'Update Owner' : 'Add Owner'}
+      </button>
+    </form>
   );
 }
