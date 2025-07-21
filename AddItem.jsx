@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function AddItem() {
-  return <div>Add Item Form Here</div>;
+  return <div>➕ Add Item Form Placeholder</div>;
 }

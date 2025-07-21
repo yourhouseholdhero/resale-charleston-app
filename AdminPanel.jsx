@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
+import InventoryView from './InventoryView';
+import AddItem from './AddItem';
+import OwnerProfiles from './OwnerProfiles';
+import SalesReport from './SalesReport';
 
 export default function AdminPanel() {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [input, setInput] = useState('');
-
-  function handleLogin() {
-    if (input === 'adminpass') setAuthenticated(true);
-  }
-
-  return authenticated ? (
-    <div>Welcome Admin</div>
-  ) : (
+  const [tab, setTab] = useState('inventory');
+  return (
     <div>
-      <input value={input} onChange={(e) => setInput(e.target.value)} />
-      <button onClick={handleLogin}>Login</button>
+      {tab === 'inventory' && <InventoryView />}
+      {tab === 'add' && <AddItem />}
+      {tab === 'owners' && <OwnerProfiles />}
+      {tab === 'sales' && <SalesReport />}
+
+      <div className="tab-bar">
+        <button onClick={() => setTab('inventory')}>Inventory</button>
+        <button onClick={() => setTab('add')}>Add Item</button>
+        <button onClick={() => setTab('owners')}>Owners</button>
+        <button onClick={() => setTab('sales')}>Sales</button>
+      </div>
     </div>
   );
 }
