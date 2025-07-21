@@ -1,45 +1,80 @@
-import React, { useState } from 'react';
-import InventoryTable from './InventoryTable';
-import AddItem from './AddItem';
-import OwnerProfiles from './OwnerProfiles';
-import SalesReport from './SalesReport';
+import React, { useState, useEffect } from 'react';
 
-export default function AdminPanel({ inventory, markAsSold, addItem }) {
-  const [activeTab, setActiveTab] = useState('inventory');
+export default function EditItem({ item, index, onSave, onCancel }) {
+  const [editedItem, setEditedItem] = useState({ ...item });
+
+  useEffect(() => {
+    setEditedItem({ ...item });
+  }, [item]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditedItem(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(index, editedItem);
+  };
 
   return (
-    <div>
-      <div className="flex justify-around mb-4">
-        <button
-          className={`px-4 py-2 rounded ${activeTab === 'inventory' ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
-          onClick={() => setActiveTab('inventory')}
-        >
-          Inventory
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${activeTab === 'add' ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
-          onClick={() => setActiveTab('add')}
-        >
-          Add Item
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${activeTab === 'owners' ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
-          onClick={() => setActiveTab('owners')}
-        >
-          Owner Profiles
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${activeTab === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
-          onClick={() => setActiveTab('sales')}
-        >
-          Sales Report
-        </button>
-      </div>
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg"
+      >
+        <h2 className="text-xl font-bold mb-4">Edit Item</h2>
 
-      {activeTab === 'inventory' && <InventoryTable inventory={inventory} markAsSold={markAsSold} />}
-      {activeTab === 'add' && <AddItem addItem={addItem} />}
-      {activeTab === 'owners' && <OwnerProfiles />}
-      {activeTab === 'sales' && <SalesReport inventory={inventory} />}
+        <input
+          name="name"
+          value={editedItem.name}
+          onChange={handleChange}
+          placeholder="Item Name"
+          className="w-full p-2 border mb-3 rounded"
+          required
+        />
+        <input
+          name="description"
+          value={editedItem.description}
+          onChange={handleChange}
+          placeholder="Description"
+          className="w-full p-2 border mb-3 rounded"
+          required
+        />
+        <input
+          name="price"
+          value={editedItem.price}
+          onChange={handleChange}
+          placeholder="Price"
+          type="number"
+          className="w-full p-2 border mb-3 rounded"
+          required
+        />
+        <input
+          name="owner"
+          value={editedItem.owner}
+          onChange={handleChange}
+          placeholder="Owner"
+          className="w-full p-2 border mb-3 rounded"
+          required
+        />
+
+        <div className="flex justify-between mt-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          >
+            Save
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
