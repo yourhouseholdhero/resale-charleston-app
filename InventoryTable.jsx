@@ -1,75 +1,91 @@
 import React, { useState } from 'react';
-import AdminPanel from './AdminPanel';
-import Storefront from './Storefront';
+import InventoryTable from './InventoryTable';
+import OwnerProfiles from './OwnerProfiles';
+import AddItem from './AddItem';
+import SalesReport from './SalesReport';
+import EditItem from './EditItem';
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState('storefront');
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+export default function AdminPanel({ inventory, setInventory, owners, setOwners }) {
+  const [activeTab, setActiveTab] = useState('inventory');
+  const [editItemIndex, setEditItemIndex] = useState(null);
 
-  const handleUnlock = (password) => {
-    if (password === 'letmein') {
-      setIsAdminUnlocked(true);
-      setActiveTab('admin');
-    } else {
-      alert('Incorrect password');
-    }
+  const handleEdit = (index) => {
+    setEditItemIndex(index);
   };
 
-  const handleLogout = () => {
-    setIsAdminUnlocked(false);
-    setActiveTab('storefront');
+  const handleSaveEdit = (index, updatedItem) => {
+    const newInventory = [...inventory];
+    newInventory[index] = updatedItem;
+    setInventory(newInventory);
+    setEditItemIndex(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditItemIndex(null);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900">
-      <nav className="flex items-center justify-between p-4 bg-white border-b shadow-sm">
-        <div>
-          <button
-            onClick={() => setActiveTab('storefront')}
-            className={`px-3 py-2 mr-2 text-sm font-semibold rounded ${activeTab === 'storefront' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          >
-            Storefront
-          </button>
-          {isAdminUnlocked ? (
-            <>
-              <button
-                onClick={() => setActiveTab('admin')}
-                className={`px-3 py-2 mr-2 text-sm font-semibold rounded ${activeTab === 'admin' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-              >
-                Admin Panel
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-3 py-2 text-sm font-semibold text-red-600 bg-red-100 rounded"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <span className="inline-flex items-center gap-2">
-              <input
-                type="password"
-                placeholder="Admin password"
-                className="px-2 py-1 border rounded"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleUnlock(e.target.value);
-                }}
-              />
-              <button
-                onClick={() => handleUnlock(document.querySelector('input[type=password]').value)}
-                className="px-3 py-1 text-sm font-semibold text-white bg-blue-600 rounded"
-              >
-                Unlock Admin
-              </button>
-            </span>
-          )}
-        </div>
-      </nav>
+    <div className="p-4 max-w-7xl mx-auto">
+      <div className="flex space-x-2 mb-4 justify-center">
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'inventory' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          onClick={() => setActiveTab('inventory')}
+        >
+          Inventory
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'add' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          onClick={() => setActiveTab('add')}
+        >
+          Add Item
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'owners' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          onClick={() => setActiveTab('owners')}
+        >
+          Owner Profiles
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          onClick={() => setActiveTab('sales')}
+        >
+          Sales Report
+        </button>
+      </div>
 
-      <main className="p-4">
-        {activeTab === 'storefront' && <Storefront />}
-        {activeTab === 'admin' && isAdminUnlocked && <AdminPanel />}
-      </main>
+      {activeTab === 'inventory' && (
+        <InventoryTable
+          inventory={inventory}
+          setInventory={setInventory}
+          onEdit={handleEdit}
+        />
+      )}
+      {activeTab === 'add' && (
+        <AddItem
+          inventory={inventory}
+          setInventory={setInventory}
+          owners={owners}
+        />
+      )}
+      {activeTab === 'owners' && (
+        <OwnerProfiles
+          owners={owners}
+          setOwners={setOwners}
+          inventory={inventory}
+        />
+      )}
+      {activeTab === 'sales' && (
+        <SalesReport inventory={inventory} />
+      )}
+
+      {editItemIndex !== null && (
+        <EditItem
+          item={inventory[editItemIndex]}
+          index={editItemIndex}
+          onSave={handleSaveEdit}
+          onCancel={handleCancelEdit}
+        />
+      )}
     </div>
   );
 }
