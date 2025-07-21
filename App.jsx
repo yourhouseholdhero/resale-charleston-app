@@ -1,27 +1,59 @@
-import React, { useState } from 'react';
-import AdminPanel from './AdminPanel.jsx';
-import Storefront from './Storefront.jsx';
+import React, { useState, useEffect } from 'react';
+import Storefront from './Storefront';
+import OwnerProfiles from './OwnerProfiles';
 
-function App() {
-  const [tab, setTab] = useState('storefront');
+export default function App() {
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [activeTab, setActiveTab] = useState('storefront');
+  const [passwordInput, setPasswordInput] = useState('');
+
+  useEffect(() => {
+    // Start on storefront tab
+    setActiveTab('storefront');
+  }, []);
+
+  const handleLogin = () => {
+    if (passwordInput === 'admin123') {
+      setAdminUnlocked(true);
+      setPasswordInput('');
+    } else {
+      alert('Wrong password!');
+    }
+  };
+
+  const renderTab = () => {
+    switch (activeTab) {
+      case 'storefront':
+        return <Storefront />;
+      case 'ownerProfiles':
+        return <OwnerProfiles />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="App">
-      <h1 className="text-2xl font-bold text-center mt-4">Resale Charleston Admin Dashboard</h1>
-      <div className="flex justify-center mt-6 space-x-4">
-        <button onClick={() => setTab('storefront')} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          Storefront
-        </button>
-        <button onClick={() => setTab('admin')} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Admin Panel
-        </button>
+    <div>
+      <div style={{ marginBottom: '1rem' }}>
+        <button onClick={() => setActiveTab('storefront')}>Storefront</button>
+        {adminUnlocked && (
+          <button onClick={() => setActiveTab('ownerProfiles')}>Owner Profiles</button>
+        )}
       </div>
-      <div className="mt-8">
-        {tab === 'storefront' && <Storefront />}
-        {tab === 'admin' && <AdminPanel />}
-      </div>
+
+      {!adminUnlocked && (
+        <div style={{ marginBottom: '1rem' }}>
+          <input
+            type="password"
+            value={passwordInput}
+            onChange={(e) => setPasswordInput(e.target.value)}
+            placeholder="Enter admin password"
+          />
+          <button onClick={handleLogin}>Unlock Admin</button>
+        </div>
+      )}
+
+      <div>{renderTab()}</div>
     </div>
   );
 }
-
-export default App;
