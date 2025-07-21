@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function OwnerProfiles() {
-  const [owners, setOwners] = useState([
-    { name: 'Alice Walker', contact: 'alice@example.com' },
-    { name: 'Bob Jones', contact: 'bob@example.com' },
-  ]);
+  const [owners, setOwners] = useState(() => {
+    const saved = localStorage.getItem('owners');
+    return saved ? JSON.parse(saved) : [
+      { name: 'Alice Walker', contact: 'alice@example.com' },
+      { name: 'Bob Jones', contact: 'bob@example.com' },
+    ];
+  });
 
   const [newOwner, setNewOwner] = useState({ name: '', contact: '' });
+
+  // Save to localStorage every time owners update
+  useEffect(() => {
+    localStorage.setItem('owners', JSON.stringify(owners));
+  }, [owners]);
 
   const handleChange = (index, field, value) => {
     const updated = [...owners];
@@ -15,8 +23,7 @@ export default function OwnerProfiles() {
   };
 
   const handleDelete = (index) => {
-    const updated = owners.filter((_, i) => i !== index);
-    setOwners(updated);
+    setOwners(owners.filter((_, i) => i !== index));
   };
 
   const handleAdd = () => {
