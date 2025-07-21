@@ -1,49 +1,75 @@
-import React from 'react';
+import React, { useState } from 'react';
+import AdminPanel from './AdminPanel';
+import Storefront from './Storefront';
 
-export default function InventoryTable({ inventory, markAsSold }) {
-  if (inventory.length === 0) {
-    return <div className="p-4 text-gray-600">No inventory items yet.</div>;
-  }
+export default function App() {
+  const [activeTab, setActiveTab] = useState('storefront');
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+
+  const handleUnlock = (password) => {
+    if (password === 'letmein') {
+      setIsAdminUnlocked(true);
+      setActiveTab('admin');
+    } else {
+      alert('Incorrect password');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAdminUnlocked(false);
+    setActiveTab('storefront');
+  };
 
   return (
-    <div className="p-4 overflow-x-auto">
-      <h2 className="text-2xl font-bold mb-4">Inventory</h2>
-      <table className="min-w-full bg-white shadow rounded overflow-hidden">
-        <thead className="bg-emerald-700 text-white">
-          <tr>
-            <th className="p-3 text-left">Item</th>
-            <th className="p-3 text-left">Owner</th>
-            <th className="p-3 text-left">Price</th>
-            <th className="p-3 text-left">Sold</th>
-            <th className="p-3 text-left">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {inventory.map((item, index) => (
-            <tr key={index} className="border-t">
-              <td className="p-3">{item.title}</td>
-              <td className="p-3">{item.owner}</td>
-              <td className="p-3">${item.price}</td>
-              <td className="p-3">{item.sold ? '✅' : '❌'}</td>
-              <td className="p-3">
-                {!item.sold && (
-                  <button
-                    onClick={() => {
-                      const soldPrice = prompt('Enter sold price:');
-                      if (soldPrice) {
-                        markAsSold(item.id, soldPrice);
-                      }
-                    }}
-                    className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                  >
-                    Mark as Sold
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="min-h-screen bg-gray-100 text-gray-900">
+      <nav className="flex items-center justify-between p-4 bg-white border-b shadow-sm">
+        <div>
+          <button
+            onClick={() => setActiveTab('storefront')}
+            className={`px-3 py-2 mr-2 text-sm font-semibold rounded ${activeTab === 'storefront' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            Storefront
+          </button>
+          {isAdminUnlocked ? (
+            <>
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`px-3 py-2 mr-2 text-sm font-semibold rounded ${activeTab === 'admin' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                Admin Panel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-2 text-sm font-semibold text-red-600 bg-red-100 rounded"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <span className="inline-flex items-center gap-2">
+              <input
+                type="password"
+                placeholder="Admin password"
+                className="px-2 py-1 border rounded"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleUnlock(e.target.value);
+                }}
+              />
+              <button
+                onClick={() => handleUnlock(document.querySelector('input[type=password]').value)}
+                className="px-3 py-1 text-sm font-semibold text-white bg-blue-600 rounded"
+              >
+                Unlock Admin
+              </button>
+            </span>
+          )}
+        </div>
+      </nav>
+
+      <main className="p-4">
+        {activeTab === 'storefront' && <Storefront />}
+        {activeTab === 'admin' && isAdminUnlocked && <AdminPanel />}
+      </main>
     </div>
   );
 }
