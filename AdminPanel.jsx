@@ -1,1 +1,3 @@
-export default function AdminPanel() { return <div>Admin Panel</div>; }
+export default function AdminPanel() {
+  return <div>🔐 Admin Access Panel</div>;
+}

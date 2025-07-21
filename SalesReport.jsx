@@ -1,1 +1,3 @@
-export default function SalesReport() { return <div>Sales Report</div>; }
+export default function SalesReport() {
+  return <div>📈 Monthly Profit & Sales Breakdown</div>;
+}

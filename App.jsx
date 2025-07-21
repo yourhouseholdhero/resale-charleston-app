@@ -1,41 +1,38 @@
 import React, { useState } from 'react';
-import AdminPanel from './components/AdminPanel.jsx';
-import CustomerGallery from './components/CustomerGallery.jsx';
-import OwnerProfiles from './components/OwnerProfiles.jsx';
-import SalesReport from './components/SalesReport.jsx';
+import Storefront from './components/Storefront';
+import AdminPanel from './components/AdminPanel';
+import InventoryView from './components/InventoryView';
+import AddItem from './components/AddItem';
+import OwnerProfiles from './components/OwnerProfiles';
+import SalesReport from './components/SalesReport';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('storefront');
+  const [tab, setTab] = useState('storefront');
   const [authenticated, setAuthenticated] = useState(false);
 
   const handlePassword = () => {
-    const pw = prompt("Enter admin password:");
-    if (pw === "MaryPopp!ns1") {
-      setAuthenticated(true);
-      setActiveTab('admin');
-    } else {
-      alert("Incorrect password.");
-    }
+    const pw = prompt('Enter admin password');
+    if (pw === 'admin123') setAuthenticated(true);
   };
 
   return (
-    <div>
+    <div className="container">
+      {tab === 'storefront' && <Storefront />}
+      {tab === 'admin' && !authenticated && (
+        <button onClick={handlePassword}>Enter Admin Area</button>
+      )}
+      {tab === 'admin' && authenticated && (
+        <>
+          <InventoryView />
+          <AddItem />
+          <OwnerProfiles />
+          <SalesReport />
+        </>
+      )}
       <div className="tab-bar">
-        <button onClick={() => setActiveTab('storefront')}>Storefront</button>
-        <button onClick={handlePassword}>Admin</button>
-        {authenticated && (
-          <>
-            <button onClick={() => setActiveTab('inventory')}>Inventory</button>
-            <button onClick={() => setActiveTab('owners')}>Owner Profiles</button>
-            <button onClick={() => setActiveTab('sales')}>Sales Report</button>
-          </>
-        )}
+        <button onClick={() => setTab('storefront')}>Storefront</button>
+        <button onClick={() => setTab('admin')}>Admin</button>
       </div>
-      {activeTab === 'storefront' && <CustomerGallery />}
-      {activeTab === 'admin' && <AdminPanel />}
-      {activeTab === 'inventory' && <AdminPanel />}
-      {activeTab === 'owners' && <OwnerProfiles />}
-      {activeTab === 'sales' && <SalesReport />}
     </div>
   );
 }
