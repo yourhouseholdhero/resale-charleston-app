@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default function InventoryView() {
-  return <div>📦 Inventory Listing Placeholder</div>;
+  return <div>Inventory Coming Soon</div>;
 }
