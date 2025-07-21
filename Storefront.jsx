@@ -1,3 +1,1 @@
-export default function Storefront() {
-  return <div>🛍️ Welcome to the Resale Storefront!</div>;
-}
+import React from 'react'; export default function Storefront() { return (<div><h2>Storefront</h2></div>); }
