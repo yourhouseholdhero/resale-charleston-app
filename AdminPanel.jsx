@@ -1,50 +1,45 @@
-// src/components/AdminPanel.jsx
 import React, { useState } from 'react';
-import { FaBoxOpen, FaPlus, FaUsers, FaChartLine, FaBars } from 'react-icons/fa';
-import Inventory from './Inventory';
+import InventoryTable from './InventoryTable';
 import AddItem from './AddItem';
 import OwnerProfiles from './OwnerProfiles';
 import SalesReport from './SalesReport';
 
-export default function AdminPanel({ inventory, setInventory, owners, setOwners }) {
-  const [tab, setTab] = useState('inventory');
-  const [collapsed, setCollapsed] = useState(false);
-
-  const renderTab = () => {
-    switch (tab) {
-      case 'inventory':
-        return <Inventory inventory={inventory} setInventory={setInventory} owners={owners} />;
-      case 'add':
-        return <AddItem setInventory={setInventory} owners={owners} />;
-      case 'owners':
-        return <OwnerProfiles owners={owners} setOwners={setOwners} inventory={inventory} />;
-      case 'sales':
-        return <SalesReport inventory={inventory} />;
-      default:
-        return null;
-    }
-  };
+export default function AdminPanel({ inventory, markAsSold, addItem }) {
+  const [activeTab, setActiveTab] = useState('inventory');
 
   return (
-    <div className="flex min-h-screen">
-      <div className={`bg-gray-800 text-white transition-all ${collapsed ? 'w-16' : 'w-48'} flex flex-col`}>
-        <button className="p-4 hover:bg-gray-700" onClick={() => setCollapsed(!collapsed)}>
-          <FaBars />
+    <div>
+      <div className="flex justify-around mb-4">
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'inventory' ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
+          onClick={() => setActiveTab('inventory')}
+        >
+          Inventory
         </button>
-        <button className="p-4 flex items-center hover:bg-gray-700" onClick={() => setTab('inventory')}>
-          <FaBoxOpen className="mr-2" /> {!collapsed && 'Inventory'}
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'add' ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
+          onClick={() => setActiveTab('add')}
+        >
+          Add Item
         </button>
-        <button className="p-4 flex items-center hover:bg-gray-700" onClick={() => setTab('add')}>
-          <FaPlus className="mr-2" /> {!collapsed && 'Add Item'}
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'owners' ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
+          onClick={() => setActiveTab('owners')}
+        >
+          Owner Profiles
         </button>
-        <button className="p-4 flex items-center hover:bg-gray-700" onClick={() => setTab('owners')}>
-          <FaUsers className="mr-2" /> {!collapsed && 'Owner Profiles'}
-        </button>
-        <button className="p-4 flex items-center hover:bg-gray-700" onClick={() => setTab('sales')}>
-          <FaChartLine className="mr-2" /> {!collapsed && 'Sales Report'}
+        <button
+          className={`px-4 py-2 rounded ${activeTab === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}
+          onClick={() => setActiveTab('sales')}
+        >
+          Sales Report
         </button>
       </div>
-      <div className="flex-1 p-6">{renderTab()}</div>
+
+      {activeTab === 'inventory' && <InventoryTable inventory={inventory} markAsSold={markAsSold} />}
+      {activeTab === 'add' && <AddItem addItem={addItem} />}
+      {activeTab === 'owners' && <OwnerProfiles />}
+      {activeTab === 'sales' && <SalesReport inventory={inventory} />}
     </div>
   );
 }
