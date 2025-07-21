@@ -1,59 +1,84 @@
-import React, { useState, useEffect } from 'react';
-import Storefront from './Storefront';
-import OwnerProfiles from './OwnerProfiles';
+import React, { useState } from 'react';
+import Storefront from './Storefront.jsx';
+import AdminPanel from './AdminPanel.jsx';
+import OwnerProfiles from './OwnerProfiles.jsx';
 
 export default function App() {
+  const [currentTab, setCurrentTab] = useState('storefront');
   const [adminUnlocked, setAdminUnlocked] = useState(false);
-  const [activeTab, setActiveTab] = useState('storefront');
-  const [passwordInput, setPasswordInput] = useState('');
+  const [password, setPassword] = useState('');
 
-  useEffect(() => {
-    // Start on storefront tab
-    setActiveTab('storefront');
-  }, []);
-
-  const handleLogin = () => {
-    if (passwordInput === 'admin123') {
+  const handleUnlock = () => {
+    if (password === 'resale123') {
       setAdminUnlocked(true);
-      setPasswordInput('');
+      setPassword('');
+      setCurrentTab('admin');
     } else {
-      alert('Wrong password!');
+      alert('Incorrect password');
     }
   };
 
-  const renderTab = () => {
-    switch (activeTab) {
-      case 'storefront':
-        return <Storefront />;
-      case 'ownerProfiles':
-        return <OwnerProfiles />;
-      default:
-        return null;
-    }
+  const handleLogout = () => {
+    setAdminUnlocked(false);
+    setPassword('');
+    setCurrentTab('storefront');
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: '1rem' }}>
-        <button onClick={() => setActiveTab('storefront')}>Storefront</button>
-        {adminUnlocked && (
-          <button onClick={() => setActiveTab('ownerProfiles')}>Owner Profiles</button>
+    <div className="p-6">
+      <nav className="flex flex-wrap gap-4 items-center mb-6">
+        <button
+          onClick={() => setCurrentTab('storefront')}
+          className="underline text-blue-700"
+        >
+          Storefront
+        </button>
+
+        {!adminUnlocked ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Admin password"
+              className="border px-2 py-1 rounded"
+            />
+            <button
+              onClick={handleUnlock}
+              className="bg-blue-500 text-white px-3 py-1 rounded"
+            >
+              Unlock Admin
+            </button>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={() => setCurrentTab('admin')}
+              className="underline text-blue-700"
+            >
+              Admin Panel
+            </button>
+            <button
+              onClick={() => setCurrentTab('owners')}
+              className="underline text-blue-700"
+            >
+              Owner Profiles
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-red-600 border px-2 py-1 border-red-600 rounded"
+            >
+              Logout
+            </button>
+          </>
         )}
-      </div>
+      </nav>
 
-      {!adminUnlocked && (
-        <div style={{ marginBottom: '1rem' }}>
-          <input
-            type="password"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            placeholder="Enter admin password"
-          />
-          <button onClick={handleLogin}>Unlock Admin</button>
-        </div>
-      )}
-
-      <div>{renderTab()}</div>
+      <main>
+        {currentTab === 'storefront' && <Storefront />}
+        {currentTab === 'admin' && adminUnlocked && <AdminPanel />}
+        {currentTab === 'owners' && adminUnlocked && <OwnerProfiles />}
+      </main>
     </div>
   );
 }
