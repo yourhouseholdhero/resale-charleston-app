@@ -1,57 +1,40 @@
-// src/components/SalesReport.jsx
 import React from 'react';
 
-export default function SalesReport({ inventory }) {
-  const soldItems = inventory.filter(item => item.isSold);
-
-  const ownerMap = soldItems.reduce((acc, item) => {
-    if (!acc[item.owner]) acc[item.owner] = [];
-    acc[item.owner].push(item);
-    return acc;
-  }, {});
-
-  const calculateDaysInInventory = (item) => {
-    const addedDate = new Date(item.dateAdded);
-    const soldDate = new Date(item.soldDate);
-    const diff = Math.floor((soldDate - addedDate) / (1000 * 60 * 60 * 24));
-    return diff;
-  };
+export default function SalesReport({ owners }) {
+  const calculateTotal = (items, key) =>
+    items.reduce((sum, item) => sum + (item[key] || 0), 0);
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Sales Report</h2>
-      {Object.entries(ownerMap).length === 0 && (
-        <p className="text-gray-500">No sales yet.</p>
-      )}
-      {Object.entries(ownerMap).map(([owner, items]) => (
-        <div key={owner} className="mb-6 bg-white p-4 rounded shadow">
-          <h3 className="text-xl font-semibold mb-2">{owner}</h3>
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr>
-                <th className="border-b py-2">Item</th>
-                <th className="border-b py-2">Sale Price</th>
-                <th className="border-b py-2">Payout</th>
-                <th className="border-b py-2">Profit</th>
-                <th className="border-b py-2">Days in Inv.</th>
-                <th className="border-b py-2">Sold Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="py-2 border-b">{item.title}</td>
-                  <td className="py-2 border-b">${item.soldPrice}</td>
-                  <td className="py-2 border-b">${item.payout ?? '-'}</td>
-                  <td className="py-2 border-b">${item.profit ?? '-'}</td>
-                  <td className="py-2 border-b">{calculateDaysInInventory(item)} days</td>
-                  <td className="py-2 border-b">{item.soldDate}</td>
-                </tr>
+      <h2 className="text-xl font-bold text-center mb-4">Sales Report</h2>
+      {owners.map((owner, index) => {
+        const soldItems = (owner.items || []).filter(item => item.sold);
+        const totalSold = calculateTotal(soldItems, 'soldPrice');
+        const totalOwed = calculateTotal(soldItems, 'owed');
+        const totalProfit = totalSold - totalOwed;
+
+        return (
+          <div key={index} className="border p-4 rounded mb-6 shadow bg-white">
+            <h3 className="text-lg font-semibold mb-2">{owner.firstName} {owner.lastName}</h3>
+            <p><strong>Total Sales:</strong> ${totalSold}</p>
+            <p><strong>Total Owed to Owner:</strong> ${totalOwed}</p>
+            <p><strong>Profit:</strong> ${totalProfit}</p>
+            <div className="mt-2 text-sm text-gray-600">
+              <p><strong>Email:</strong> {owner.email}</p>
+              <p><strong>Phone:</strong> {owner.phone}</p>
+            </div>
+            <div className="mt-3 space-y-2">
+              {soldItems.map((item, idx) => (
+                <div key={idx} className="border p-2 rounded bg-slate-50">
+                  <p><strong>{item.title}</strong> - Sold for ${item.soldPrice}</p>
+                  <p>Owed: ${item.owed} • Paid: {item.paid ? '✅' : '❌'}</p>
+                  <p>Profit: ${item.soldPrice - item.owed}</p>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
