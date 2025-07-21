@@ -1,18 +1,6 @@
-{
-  "name": "resale-charleston-app",
-  "version": "1.0.0",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "qrcode.react": "^1.0.0"
-  },
-  "devDependencies": {
-    "vite": "^4.5.0",
-    "@vitejs/plugin-react": "^4.0.0"
-  }
-}
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App.jsx';
+import './index.css';
+
+ReactDOM.render(<App />, document.getElementById('root'));
