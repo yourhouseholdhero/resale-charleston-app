@@ -1,57 +1,50 @@
-// src/components/SalesReport.jsx
-import React from 'react';
+// src/components/AdminPanel.jsx
+import React, { useState } from 'react';
+import { FaBoxOpen, FaPlus, FaUsers, FaChartLine, FaBars } from 'react-icons/fa';
+import Inventory from './Inventory';
+import AddItem from './AddItem';
+import OwnerProfiles from './OwnerProfiles';
+import SalesReport from './SalesReport';
 
-export default function SalesReport({ inventory }) {
-  const soldItems = inventory.filter(item => item.isSold);
+export default function AdminPanel({ inventory, setInventory, owners, setOwners }) {
+  const [tab, setTab] = useState('inventory');
+  const [collapsed, setCollapsed] = useState(false);
 
-  const ownerMap = soldItems.reduce((acc, item) => {
-    if (!acc[item.owner]) acc[item.owner] = [];
-    acc[item.owner].push(item);
-    return acc;
-  }, {});
-
-  const calculateDaysInInventory = (item) => {
-    const addedDate = new Date(item.dateAdded);
-    const soldDate = new Date(item.soldDate);
-    const diff = Math.floor((soldDate - addedDate) / (1000 * 60 * 60 * 24));
-    return diff;
+  const renderTab = () => {
+    switch (tab) {
+      case 'inventory':
+        return <Inventory inventory={inventory} setInventory={setInventory} owners={owners} />;
+      case 'add':
+        return <AddItem setInventory={setInventory} owners={owners} />;
+      case 'owners':
+        return <OwnerProfiles owners={owners} setOwners={setOwners} inventory={inventory} />;
+      case 'sales':
+        return <SalesReport inventory={inventory} />;
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Sales Report</h2>
-      {Object.entries(ownerMap).length === 0 && (
-        <p className="text-gray-500">No sales yet.</p>
-      )}
-      {Object.entries(ownerMap).map(([owner, items]) => (
-        <div key={owner} className="mb-6 bg-white p-4 rounded shadow">
-          <h3 className="text-xl font-semibold mb-2">{owner}</h3>
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr>
-                <th className="border-b py-2">Item</th>
-                <th className="border-b py-2">Sale Price</th>
-                <th className="border-b py-2">Payout</th>
-                <th className="border-b py-2">Profit</th>
-                <th className="border-b py-2">Days in Inv.</th>
-                <th className="border-b py-2">Sold Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="py-2 border-b">{item.title}</td>
-                  <td className="py-2 border-b">${item.soldPrice}</td>
-                  <td className="py-2 border-b">${item.payout ?? '-'}</td>
-                  <td className="py-2 border-b">${item.profit ?? '-'}</td>
-                  <td className="py-2 border-b">{calculateDaysInInventory(item)} days</td>
-                  <td className="py-2 border-b">{item.soldDate}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+    <div className="flex min-h-screen">
+      <div className={`bg-gray-800 text-white transition-all ${collapsed ? 'w-16' : 'w-48'} flex flex-col`}>
+        <button className="p-4 hover:bg-gray-700" onClick={() => setCollapsed(!collapsed)}>
+          <FaBars />
+        </button>
+        <button className="p-4 flex items-center hover:bg-gray-700" onClick={() => setTab('inventory')}>
+          <FaBoxOpen className="mr-2" /> {!collapsed && 'Inventory'}
+        </button>
+        <button className="p-4 flex items-center hover:bg-gray-700" onClick={() => setTab('add')}>
+          <FaPlus className="mr-2" /> {!collapsed && 'Add Item'}
+        </button>
+        <button className="p-4 flex items-center hover:bg-gray-700" onClick={() => setTab('owners')}>
+          <FaUsers className="mr-2" /> {!collapsed && 'Owner Profiles'}
+        </button>
+        <button className="p-4 flex items-center hover:bg-gray-700" onClick={() => setTab('sales')}>
+          <FaChartLine className="mr-2" /> {!collapsed && 'Sales Report'}
+        </button>
+      </div>
+      <div className="flex-1 p-6">{renderTab()}</div>
     </div>
   );
 }
