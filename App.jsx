@@ -5,12 +5,14 @@ import OwnerProfiles from './OwnerProfiles.jsx';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('storefront');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [password, setPassword] = useState('');
 
-  const handleUnlock = () => {
+  const handlePasswordSubmit = () => {
     if (password === 'resale123') {
       setAdminUnlocked(true);
+      setIsLoggingIn(false);
       setPassword('');
       setCurrentTab('admin');
     } else {
@@ -34,23 +36,34 @@ export default function App() {
           Storefront
         </button>
 
-        {!adminUnlocked ? (
-          <div className="flex items-center gap-2">
+        {!adminUnlocked && !isLoggingIn && (
+          <button
+            onClick={() => setIsLoggingIn(true)}
+            className="underline text-blue-700"
+          >
+            Admin Login
+          </button>
+        )}
+
+        {isLoggingIn && !adminUnlocked && (
+          <div className="flex gap-2 items-center">
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Admin password"
+              placeholder="Enter password"
               className="border px-2 py-1 rounded"
             />
             <button
-              onClick={handleUnlock}
-              className="bg-blue-500 text-white px-3 py-1 rounded"
+              onClick={handlePasswordSubmit}
+              className="bg-blue-600 text-white px-4 py-1 rounded"
             >
-              Unlock Admin
+              Submit
             </button>
           </div>
-        ) : (
+        )}
+
+        {adminUnlocked && (
           <>
             <button
               onClick={() => setCurrentTab('admin')}
