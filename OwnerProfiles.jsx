@@ -1,80 +1,102 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 export default function OwnerProfiles() {
-  const [owners, setOwners] = useState(() => {
-    const saved = localStorage.getItem('owners');
-    return saved ? JSON.parse(saved) : [
-      { name: 'Alice Walker', contact: 'alice@example.com' },
-      { name: 'Bob Jones', contact: 'bob@example.com' },
-    ];
-  });
+  const [owners, setOwners] = useState([]);
+  const [form, setForm] = useState({ name: '', contact: '', image: '' });
+  const [editingIndex, setEditingIndex] = useState(null);
 
-  const [newOwner, setNewOwner] = useState({ name: '', contact: '' });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-  // Save to localStorage every time owners update
-  useEffect(() => {
-    localStorage.setItem('owners', JSON.stringify(owners));
-  }, [owners]);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (editingIndex !== null) {
+      const updated = [...owners];
+      updated[editingIndex] = form;
+      setOwners(updated);
+      setEditingIndex(null);
+    } else {
+      setOwners([...owners, form]);
+    }
+    setForm({ name: '', contact: '', image: '' });
+  };
 
-  const handleChange = (index, field, value) => {
-    const updated = [...owners];
-    updated[index][field] = value;
-    setOwners(updated);
+  const handleEdit = (index) => {
+    setForm(owners[index]);
+    setEditingIndex(index);
   };
 
   const handleDelete = (index) => {
-    setOwners(owners.filter((_, i) => i !== index));
-  };
-
-  const handleAdd = () => {
-    if (newOwner.name.trim() && newOwner.contact.trim()) {
-      setOwners([...owners, newOwner]);
-      setNewOwner({ name: '', contact: '' });
-    }
+    const updated = owners.filter((_, i) => i !== index);
+    setOwners(updated);
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Owner Profiles</h2>
+    <div className="p-4 max-w-xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Owner Profiles</h2>
 
-      <ul className="space-y-2 mb-4">
-        {owners.map((owner, index) => (
-          <li key={index} className="flex gap-2 items-center">
-            <input
-              type="text"
-              value={owner.name}
-              onChange={(e) => handleChange(index, 'name', e.target.value)}
-              className="border px-2 py-1 rounded"
-            />
-            <input
-              type="email"
-              value={owner.contact}
-              onChange={(e) => handleChange(index, 'contact', e.target.value)}
-              className="border px-2 py-1 rounded"
-            />
-            <button onClick={() => handleDelete(index)} className="text-red-600">🗑️</button>
-          </li>
-        ))}
-      </ul>
-
-      <div className="flex gap-2">
+      <form onSubmit={handleSubmit} className="mb-6 space-y-3">
         <input
-          type="text"
-          placeholder="New owner name"
-          value={newOwner.name}
-          onChange={(e) => setNewOwner({ ...newOwner, name: e.target.value })}
-          className="border px-2 py-1 rounded"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          placeholder="Owner Name"
+          className="border p-2 w-full"
+          required
         />
         <input
-          type="email"
-          placeholder="Email"
-          value={newOwner.contact}
-          onChange={(e) => setNewOwner({ ...newOwner, contact: e.target.value })}
-          className="border px-2 py-1 rounded"
+          name="contact"
+          value={form.contact}
+          onChange={handleChange}
+          placeholder="Contact Info"
+          className="border p-2 w-full"
         />
-        <button onClick={handleAdd} className="bg-blue-500 text-white px-3 py-1 rounded">
-          ➕ Add
+        <input
+          name="image"
+          value={form.image}
+          onChange={handleChange}
+          placeholder="Image URL"
+          className="border p-2 w-full"
+        />
+        <button type="submit" className="bg-blue-500 text-white px-4 py-2">
+          {editingIndex !== null ? 'Update Owner' : 'Add Owner'}
         </button>
+      </form>
+
+      <div className="space-y-4">
+        {owners.map((owner, index) => (
+          <div
+            key={index}
+            className="border rounded p-4 flex items-center justify-between"
+          >
+            <div>
+              <h3 className="text-lg font-semibold">{owner.name}</h3>
+              <p>{owner.contact}</p>
+              {owner.image && (
+                <img
+                  src={owner.image}
+                  alt={owner.name}
+                  className="h-20 w-20 object-cover mt-2"
+                />
+              )}
+            </div>
+            <div className="space-x-2">
+              <button
+                onClick={() => handleEdit(index)}
+                className="text-yellow-600"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(index)}
+                className="text-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
