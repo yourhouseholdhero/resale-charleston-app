@@ -4,25 +4,25 @@ import AddItem from './AddItem';
 import OwnerProfiles from './OwnerProfiles';
 
 export default function AdminPanel({ isAdmin }) {
-  const [selectedTab, setSelectedTab] = useState('inventory');
+  const [selectedTab, setSelectedTab] = useState('Inventory');
 
   if (!isAdmin) {
     return (
-      <div className="text-center mt-10 text-gray-500">
+      <div className="text-center mt-10 text-gray-600">
         <p>🔒 Admin access required to view this panel.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <h2 className="text-2xl font-bold mb-6">🛠️ Admin Control Panel</h2>
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-2xl font-bold text-left mb-6">🛠️ Admin Control Panel</h2>
 
-      <div className="flex justify-center gap-4 mb-6 flex-wrap">
+      <div className="flex justify-center mb-6 gap-2 flex-wrap">
         <button
-          onClick={() => setSelectedTab('inventory')}
+          onClick={() => setSelectedTab('Inventory')}
           className={`px-4 py-2 rounded-md ${
-            selectedTab === 'inventory'
+            selectedTab === 'Inventory'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 text-gray-700'
           }`}
@@ -30,9 +30,9 @@ export default function AdminPanel({ isAdmin }) {
           Inventory
         </button>
         <button
-          onClick={() => setSelectedTab('addItem')}
+          onClick={() => setSelectedTab('AddItem')}
           className={`px-4 py-2 rounded-md ${
-            selectedTab === 'addItem'
+            selectedTab === 'AddItem'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 text-gray-700'
           }`}
@@ -40,9 +40,9 @@ export default function AdminPanel({ isAdmin }) {
           Add Item
         </button>
         <button
-          onClick={() => setSelectedTab('ownerProfiles')}
+          onClick={() => setSelectedTab('OwnerProfiles')}
           className={`px-4 py-2 rounded-md ${
-            selectedTab === 'ownerProfiles'
+            selectedTab === 'OwnerProfiles'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 text-gray-700'
           }`}
@@ -52,9 +52,9 @@ export default function AdminPanel({ isAdmin }) {
       </div>
 
       <div className="bg-white rounded shadow p-6">
-        {selectedTab === 'inventory' && <InventoryTable />}
-        {selectedTab === 'addItem' && <AddItem />}
-        {selectedTab === 'ownerProfiles' && <OwnerProfiles />}
+        {selectedTab === 'Inventory' && <InventoryTable />}
+        {selectedTab === 'AddItem' && <AddItem />}
+        {selectedTab === 'OwnerProfiles' && <OwnerProfiles />}
       </div>
     </div>
   );
