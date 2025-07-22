@@ -1,40 +1,61 @@
 import React from 'react';
 
-export default function SalesReport({ owners }) {
-  const calculateTotal = (items, key) =>
-    items.reduce((sum, item) => sum + (item[key] || 0), 0);
+export default function SalesReport({ items, owners }) {
+  const soldItems = items.filter(item => item.status === 'sold');
+
+  const getOwnerName = (ownerId) => {
+    const owner = owners.find(o => o.id === ownerId);
+    return owner ? `${owner.firstName} ${owner.lastName}` : 'Unknown';
+  };
+
+  const calculatePayouts = (item) => {
+    const owner = owners.find(o => o.id === item.ownerId);
+    const split = owner ? parseFloat(owner.split) : 50;
+    const consignerAmount = (item.soldFor * (split / 100)).toFixed(2);
+    const profit = (item.soldFor - consignerAmount).toFixed(2);
+    return { consignerAmount, profit };
+  };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold text-center mb-4">Sales Report</h2>
-      {owners.map((owner, index) => {
-        const soldItems = (owner.items || []).filter(item => item.sold);
-        const totalSold = calculateTotal(soldItems, 'soldPrice');
-        const totalOwed = calculateTotal(soldItems, 'owed');
-        const totalProfit = totalSold - totalOwed;
-
-        return (
-          <div key={index} className="border p-4 rounded mb-6 shadow bg-white">
-            <h3 className="text-lg font-semibold mb-2">{owner.firstName} {owner.lastName}</h3>
-            <p><strong>Total Sales:</strong> ${totalSold}</p>
-            <p><strong>Total Owed to Owner:</strong> ${totalOwed}</p>
-            <p><strong>Profit:</strong> ${totalProfit}</p>
-            <div className="mt-2 text-sm text-gray-600">
-              <p><strong>Email:</strong> {owner.email}</p>
-              <p><strong>Phone:</strong> {owner.phone}</p>
-            </div>
-            <div className="mt-3 space-y-2">
-              {soldItems.map((item, idx) => (
-                <div key={idx} className="border p-2 rounded bg-slate-50">
-                  <p><strong>{item.title}</strong> - Sold for ${item.soldPrice}</p>
-                  <p>Owed: ${item.owed} • Paid: {item.paid ? '✅' : '❌'}</p>
-                  <p>Profit: ${item.soldPrice - item.owed}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+    <div className="max-w-7xl mx-auto p-4">
+      <h2 className="text-2xl font-bold mb-6 text-center">Sales Report</h2>
+      {soldItems.length === 0 ? (
+        <p className="text-center text-gray-500">No sales to report yet.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-auto bg-white shadow-md rounded-lg">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-3 text-left">Consigner</th>
+                <th className="p-3 text-left">Item</th>
+                <th className="p-3 text-left">Split %</th>
+                <th className="p-3 text-left">Consigner Payout</th>
+                <th className="p-3 text-left">Your Profit</th>
+                <th className="p-3 text-left">Sold For</th>
+                <th className="p-3 text-left">Date Sold</th>
+              </tr>
+            </thead>
+            <tbody>
+              {soldItems.map((item) => {
+                const { consignerAmount, profit } = calculatePayouts(item);
+                const owner = owners.find(o => o.id === item.ownerId);
+                const split = owner ? owner.split : 50;
+                return (
+                  <tr key={item.id} className="border-b">
+                    <td className="p-3">{getOwnerName(item.ownerId)}</td>
+                    <td className="p-3">{item.title}</td>
+                    <td className="p-3">{split}%</td>
+                    <td className="p-3">${consignerAmount}</td>
+                    <td className="p-3">${profit}</td>
+                    <td className="p-3">${item.soldFor}</td>
+                    <td className="p-3">{item.soldDate || 'N/A'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
