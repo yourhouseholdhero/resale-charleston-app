@@ -1,79 +1,115 @@
 import React, { useState } from 'react';
 import Storefront from './components/Storefront';
 import AdminPanel from './components/AdminPanel';
-import './App.css';
 
-export default function App() {
-  const [page, setPage] = useState('home');
-  const [menuOpen, setMenuOpen] = useState(false);
+function App() {
+  const [view, setView] = useState('landing');
   const [adminUnlocked, setAdminUnlocked] = useState(false);
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [password, setPassword] = useState('');
 
-  const correctPassword = 'resale2024'; // 👈 Change this to your real password
-
   const handleLogin = () => {
-    if (password === correctPassword) {
+    if (password === 'letmein') {
       setAdminUnlocked(true);
-      setShowPasswordPrompt(false);
+      setView('admin');
       setPassword('');
-      setPage('admin');
     } else {
-      alert('Incorrect password');
+      alert('Incorrect password.');
     }
   };
 
-  const renderContent = () => {
-    if (page === 'storefront') return <Storefront />;
-    if (page === 'admin' && adminUnlocked) return <AdminPanel />;
-    return (
-      <div className="landing">
-        <h1>Welcome to Resale Charleston</h1>
-        <p>
-          See our Storefront <button onClick={() => setPage('storefront')} style={{ color: 'blue', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>here</button>.
-        </p>
-      </div>
-    );
+  const logout = () => {
+    setAdminUnlocked(false);
+    setView('landing');
   };
 
-  return (
-    <div className="App" style={{ fontFamily: 'sans-serif', textAlign: 'center', padding: '20px' }}>
-      {/* Hamburger Menu */}
-      <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)' }}>
-        <button onClick={() => setMenuOpen(!menuOpen)} style={{ fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer' }}>
-          ☰
-        </button>
-        {menuOpen && (
-          <div style={{ backgroundColor: '#f0f0f0', border: '1px solid #ccc', borderRadius: '5px', padding: '10px', marginTop: '8px' }}>
-            <div style={{ marginBottom: '8px', cursor: 'pointer' }} onClick={() => { setPage('storefront'); setMenuOpen(false); }}>Storefront</div>
-            {!adminUnlocked && (
-              <div style={{ cursor: 'pointer' }} onClick={() => { setShowPasswordPrompt(true); setMenuOpen(false); }}>Admin Login</div>
-            )}
-            {adminUnlocked && (
-              <div style={{ cursor: 'pointer' }} onClick={() => { setPage('admin'); setMenuOpen(false); }}>Admin Panel</div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Password Prompt */}
-      {showPasswordPrompt && (
-        <div style={{ marginTop: '30px' }}>
+  const renderMenu = () => (
+    <div className="absolute bg-white border shadow right-4 top-14 rounded z-50">
+      <button
+        onClick={() => {
+          setView('storefront');
+          setShowMenu(false);
+        }}
+        className="block px-6 py-3 text-left w-full hover:bg-gray-100"
+      >
+        Storefront
+      </button>
+      {!adminUnlocked && (
+        <div className="p-4 border-t">
           <input
             type="password"
-            placeholder="Enter admin password"
+            placeholder="Admin password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ padding: '8px', fontSize: '16px' }}
+            className="border px-2 py-1 rounded w-full mb-2"
           />
-          <button onClick={handleLogin} style={{ padding: '8px 16px', marginLeft: '10px', fontSize: '16px' }}>Unlock</button>
+          <button
+            onClick={handleLogin}
+            className="bg-blue-600 text-white px-3 py-1 w-full rounded"
+          >
+            Unlock Admin
+          </button>
         </div>
       )}
+      {adminUnlocked && (
+        <>
+          <button
+            onClick={() => {
+              setView('admin');
+              setShowMenu(false);
+            }}
+            className="block px-6 py-3 text-left w-full hover:bg-gray-100"
+          >
+            Admin Panel
+          </button>
+          <button
+            onClick={logout}
+            className="block px-6 py-3 text-left w-full text-red-500 hover:bg-red-100"
+          >
+            Logout
+          </button>
+        </>
+      )}
+    </div>
+  );
 
-      {/* Main Content */}
-      <div style={{ marginTop: '80px' }}>
-        {renderContent()}
+  return (
+    <div className="font-sans min-h-screen bg-gray-100 text-gray-800 relative">
+      {/* Nav */}
+      <div className="bg-white p-4 shadow-md flex justify-between items-center">
+        <h1 className="text-xl font-bold">Resale Charleston</h1>
+        <button
+          className="text-3xl px-2 py-1"
+          onClick={() => setShowMenu(!showMenu)}
+        >
+          ☰
+        </button>
+        {showMenu && renderMenu()}
+      </div>
+
+      {/* Page Content */}
+      <div className="p-6">
+        {view === 'landing' && (
+          <div className="text-center mt-20">
+            <h2 className="text-2xl font-semibold">Welcome to Resale Charleston.</h2>
+            <p className="mt-4">
+              See our{' '}
+              <button
+                onClick={() => setView('storefront')}
+                className="text-blue-600 underline hover:text-blue-800"
+              >
+                Storefront here
+              </button>
+              .
+            </p>
+          </div>
+        )}
+
+        {view === 'storefront' && <Storefront />}
+        {view === 'admin' && adminUnlocked && <AdminPanel />}
       </div>
     </div>
   );
 }
+
+export default App;
