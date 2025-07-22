@@ -1,45 +1,74 @@
 import React, { useState } from 'react';
 
-export default function OwnerProfiles({ owners }) {
-  const [selectedOwner, setSelectedOwner] = useState(null);
+export default function OwnerProfiles({ owners, onUpdateOwner, onDeleteOwner }) {
+  const [editingOwnerId, setEditingOwnerId] = useState(null);
+  const [editedOwner, setEditedOwner] = useState({});
+
+  const handleEditClick = (owner) => {
+    setEditingOwnerId(owner.id);
+    setEditedOwner({ ...owner });
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditedOwner({ ...editedOwner, [name]: value });
+  };
+
+  const handleSave = () => {
+    onUpdateOwner(editedOwner);
+    setEditingOwnerId(null);
+  };
 
   return (
-    <div className="p-4 space-y-4">
-      <h2 className="text-xl font-bold text-center">Owner Profiles</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {owners.map((owner, index) => (
-          <div
-            key={index}
-            className="border rounded p-4 shadow hover:bg-slate-50 cursor-pointer"
-            onClick={() => setSelectedOwner(owner)}
-          >
-            <h3 className="text-lg font-semibold">{owner.firstName} {owner.lastName}</h3>
-            <p>{owner.email}</p>
-            <p>{owner.phone}</p>
-            <p><strong>Split:</strong> {owner.split}%</p>
-          </div>
-        ))}
-      </div>
-
-      {selectedOwner && (
-        <div className="mt-6 bg-white p-4 rounded shadow border">
-          <h3 className="text-lg font-bold mb-2">Items from {selectedOwner.firstName}</h3>
-          {selectedOwner.items && selectedOwner.items.length > 0 ? (
-            <div className="space-y-2">
-              {selectedOwner.items.map((item, i) => (
-                <div key={i} className="border p-3 rounded bg-gray-50">
-                  <p><strong>Title:</strong> {item.title}</p>
-                  <p><strong>Price:</strong> ${item.price}</p>
-                  <p><strong>Sold:</strong> {item.sold ? 'Yes' : 'No'}</p>
-                  {item.sold && <p><strong>Sold Price:</strong> ${item.soldPrice}</p>}
-                  <p><strong>Owed:</strong> ${item.owed}</p>
-                  <p><strong>Paid:</strong> {item.paid ? '✅' : '❌'}</p>
-                </div>
-              ))}
+    <div className="max-w-5xl mx-auto p-4">
+      <h2 className="text-2xl font-bold mb-6 text-center">Owner Profiles</h2>
+      {owners.length === 0 ? (
+        <p className="text-center text-gray-500">No owners added yet.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {owners.map((owner) => (
+            <div key={owner.id} className="border rounded-lg p-4 shadow-sm bg-white">
+              {editingOwnerId === owner.id ? (
+                <>
+                  <div className="mb-2">
+                    <label className="block font-medium">First Name</label>
+                    <input name="firstName" value={editedOwner.firstName} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
+                  </div>
+                  <div className="mb-2">
+                    <label className="block font-medium">Last Name</label>
+                    <input name="lastName" value={editedOwner.lastName} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
+                  </div>
+                  <div className="mb-2">
+                    <label className="block font-medium">Email</label>
+                    <input name="email" value={editedOwner.email} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
+                  </div>
+                  <div className="mb-2">
+                    <label className="block font-medium">Phone</label>
+                    <input name="phone" value={editedOwner.phone} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block font-medium">Split %</label>
+                    <input name="split" value={editedOwner.split} onChange={handleChange} type="number" min="0" max="100" className="w-full border px-2 py-1 rounded" />
+                  </div>
+                  <div className="flex justify-between">
+                    <button onClick={handleSave} className="bg-blue-600 text-white px-4 py-1 rounded">Save</button>
+                    <button onClick={() => setEditingOwnerId(null)} className="bg-gray-400 text-white px-4 py-1 rounded">Cancel</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p><span className="font-semibold">Name:</span> {owner.firstName} {owner.lastName}</p>
+                  <p><span className="font-semibold">Email:</span> {owner.email}</p>
+                  <p><span className="font-semibold">Phone:</span> {owner.phone}</p>
+                  <p><span className="font-semibold">Split:</span> {owner.split}%</p>
+                  <div className="mt-3 flex gap-4">
+                    <button onClick={() => handleEditClick(owner)} className="bg-yellow-500 text-white px-4 py-1 rounded">Edit</button>
+                    <button onClick={() => onDeleteOwner(owner.id)} className="bg-red-600 text-white px-4 py-1 rounded">Delete</button>
+                  </div>
+                </>
+              )}
             </div>
-          ) : (
-            <p>No items linked to this owner.</p>
-          )}
+          ))}
         </div>
       )}
     </div>
