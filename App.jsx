@@ -9,7 +9,7 @@ function App() {
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
-    if (password === 'letmein') {
+    if (password === 'resalechs') {
       setAdminUnlocked(true);
       setView('admin');
       setPassword('');
