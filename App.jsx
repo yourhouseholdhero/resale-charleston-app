@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Storefront from './components/Storefront';
-import AdminPanel from './components/AdminPanel';
+import Storefront from './Storefront';
+import AdminPanel from './AdminPanel';
 
 function App() {
   const [view, setView] = useState('landing');
