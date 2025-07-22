@@ -109,7 +109,7 @@ function App() {
 
         {view === 'storefront' && <Storefront />}
         {view === 'admin' && adminUnlocked && (
-          <AdminPanel adminUnlocked={adminUnlocked} />
+          <AdminPanel isAdmin={adminUnlocked} />
         )}
       </div>
     </div>
