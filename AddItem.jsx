@@ -1,61 +1,89 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-export default function Inventory({ inventory, setInventory }) {
-  const [refresh, setRefresh] = useState(false);
+export default function AddItem({ onAddItem }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    room: '',
+    owner: '',
+    images: []
+  });
 
-  const handleMarkSold = (id) => {
-    const salePrice = prompt("Enter sale price:");
-    if (!salePrice) return;
-
-    const updatedInventory = inventory.map(item => {
-      if (item.id === id) {
-        return {
-          ...item,
-          sold: true,
-          salePrice,
-          dateSold: new Date().toLocaleDateString()
-        };
-      }
-      return item;
-    });
-
-    setInventory(updatedInventory);
-    localStorage.setItem("inventory", JSON.stringify(updatedInventory));
-    setRefresh(!refresh);
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'images') {
+      setFormData({
+        ...formData,
+        images: [...files]
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
 
-  useEffect(() => {
-    const stored = localStorage.getItem("inventory");
-    if (stored) setInventory(JSON.parse(stored));
-  }, [refresh]);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.price || !formData.owner) {
+      alert('Please fill all required fields.');
+      return;
+    }
+    onAddItem(formData);
+    setFormData({
+      name: '',
+      description: '',
+      price: '',
+      category: '',
+      room: '',
+      owner: '',
+      images: []
+    });
+  };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-semibold mb-4">Inventory</h2>
-      {inventory.length === 0 ? (
-        <p>No items added yet.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {inventory.map((item) => (
-            <div key={item.id} className="border p-4 rounded bg-white shadow">
-              <img src={item.imageUrls?.[0]} alt={item.title} className="w-full h-48 object-cover rounded mb-2" />
-              <h3 className="font-bold">{item.title}</h3>
-              <p>{item.description}</p>
-              <p><strong>Owner:</strong> {item.owner}</p>
-              <p><strong>Price:</strong> ${item.price}</p>
-              <p><strong>Sold:</strong> {item.sold ? `✅ for $${item.salePrice}` : '❌ Not yet'}</p>
-              {!item.sold && (
-                <button
-                  onClick={() => handleMarkSold(item.id)}
-                  className="mt-2 bg-blue-600 text-white px-4 py-1 rounded"
-                >
-                  Mark as Sold
-                </button>
-              )}
-            </div>
-          ))}
+    <div className="max-w-xl mx-auto bg-white shadow-md rounded p-6 mt-6">
+      <h2 className="text-xl font-semibold mb-4 text-center">Add New Item</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block mb-1">Name <span className="text-red-500">*</span></label>
+          <input name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border rounded" />
         </div>
-      )}
+        <div>
+          <label className="block mb-1">Description</label>
+          <textarea name="description" value={formData.description} onChange={handleChange} className="w-full px-3 py-2 border rounded" />
+        </div>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label className="block mb-1">Price <span className="text-red-500">*</span></label>
+            <input name="price" value={formData.price} onChange={handleChange} type="number" step="0.01" className="w-full px-3 py-2 border rounded" />
+          </div>
+          <div className="flex-1">
+            <label className="block mb-1">Category</label>
+            <input name="category" value={formData.category} onChange={handleChange} className="w-full px-3 py-2 border rounded" />
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label className="block mb-1">Room</label>
+            <input name="room" value={formData.room} onChange={handleChange} className="w-full px-3 py-2 border rounded" />
+          </div>
+          <div className="flex-1">
+            <label className="block mb-1">Owner <span className="text-red-500">*</span></label>
+            <input name="owner" value={formData.owner} onChange={handleChange} className="w-full px-3 py-2 border rounded" />
+          </div>
+        </div>
+        <div>
+          <label className="block mb-1">Upload Images (up to 10)</label>
+          <input name="images" type="file" multiple accept="image/*" onChange={handleChange} className="w-full px-3 py-2 border rounded" />
+        </div>
+        <button type="submit" className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+          Add Item
+        </button>
+      </form>
     </div>
   );
 }
