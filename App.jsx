@@ -34,6 +34,7 @@ function App() {
       >
         Storefront
       </button>
+
       {!adminUnlocked && (
         <div className="p-4 border-t">
           <input
@@ -51,6 +52,7 @@ function App() {
           </button>
         </div>
       )}
+
       {adminUnlocked && (
         <>
           <button
@@ -82,7 +84,7 @@ function App() {
           className="text-3xl px-2 py-1"
           onClick={() => setShowMenu(!showMenu)}
         >
-          ☰
+          ≡
         </button>
         {showMenu && renderMenu()}
       </div>
@@ -106,7 +108,9 @@ function App() {
         )}
 
         {view === 'storefront' && <Storefront />}
-        {view === 'admin' && adminUnlocked && <AdminPanel />}
+        {view === 'admin' && adminUnlocked && (
+          <AdminPanel adminUnlocked={adminUnlocked} />
+        )}
       </div>
     </div>
   );
