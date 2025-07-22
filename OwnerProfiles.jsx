@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function OwnerProfiles({ owners, onUpdateOwner, onDeleteOwner }) {
+export default function OwnerProfiles({ owners = [], onUpdateOwner, onDeleteOwner }) {
   const [editingOwnerId, setEditingOwnerId] = useState(null);
   const [editedOwner, setEditedOwner] = useState({});
 
@@ -11,7 +11,7 @@ export default function OwnerProfiles({ owners, onUpdateOwner, onDeleteOwner }) 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEditedOwner({ ...editedOwner, [name]: value });
+    setEditedOwner((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
@@ -32,23 +32,23 @@ export default function OwnerProfiles({ owners, onUpdateOwner, onDeleteOwner }) 
                 <>
                   <div className="mb-2">
                     <label className="block font-medium">First Name</label>
-                    <input name="firstName" value={editedOwner.firstName} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
+                    <input name="firstName" value={editedOwner.firstName || ''} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
                   </div>
                   <div className="mb-2">
                     <label className="block font-medium">Last Name</label>
-                    <input name="lastName" value={editedOwner.lastName} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
+                    <input name="lastName" value={editedOwner.lastName || ''} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
                   </div>
                   <div className="mb-2">
                     <label className="block font-medium">Email</label>
-                    <input name="email" value={editedOwner.email} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
+                    <input name="email" value={editedOwner.email || ''} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
                   </div>
                   <div className="mb-2">
                     <label className="block font-medium">Phone</label>
-                    <input name="phone" value={editedOwner.phone} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
+                    <input name="phone" value={editedOwner.phone || ''} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
                   </div>
                   <div className="mb-4">
                     <label className="block font-medium">Split %</label>
-                    <input name="split" value={editedOwner.split} onChange={handleChange} type="number" min="0" max="100" className="w-full border px-2 py-1 rounded" />
+                    <input name="split" type="number" min="0" max="100" value={editedOwner.split || ''} onChange={handleChange} className="w-full border px-2 py-1 rounded" />
                   </div>
                   <div className="flex justify-between">
                     <button onClick={handleSave} className="bg-blue-600 text-white px-4 py-1 rounded">Save</button>
