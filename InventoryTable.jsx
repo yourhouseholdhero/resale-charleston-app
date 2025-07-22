@@ -1,91 +1,44 @@
-import React, { useState } from 'react';
-import InventoryTable from './InventoryTable';
-import OwnerProfiles from './OwnerProfiles';
-import AddItem from './AddItem';
-import SalesReport from './SalesReport';
-import EditItem from './EditItem';
+import React from 'react';
 
-export default function AdminPanel({ inventory, setInventory, owners, setOwners }) {
-  const [activeTab, setActiveTab] = useState('inventory');
-  const [editItemIndex, setEditItemIndex] = useState(null);
-
-  const handleEdit = (index) => {
-    setEditItemIndex(index);
-  };
-
-  const handleSaveEdit = (index, updatedItem) => {
-    const newInventory = [...inventory];
-    newInventory[index] = updatedItem;
-    setInventory(newInventory);
-    setEditItemIndex(null);
-  };
-
-  const handleCancelEdit = () => {
-    setEditItemIndex(null);
-  };
+export default function InventoryTable({ items = [] }) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return (
+      <div className="text-center text-gray-500 p-4">
+        No inventory items to display.
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 max-w-7xl mx-auto">
-      <div className="flex space-x-2 mb-4 justify-center">
-        <button
-          className={`px-4 py-2 rounded ${activeTab === 'inventory' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-          onClick={() => setActiveTab('inventory')}
-        >
-          Inventory
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${activeTab === 'add' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-          onClick={() => setActiveTab('add')}
-        >
-          Add Item
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${activeTab === 'owners' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-          onClick={() => setActiveTab('owners')}
-        >
-          Owner Profiles
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${activeTab === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-          onClick={() => setActiveTab('sales')}
-        >
-          Sales Report
-        </button>
-      </div>
-
-      {activeTab === 'inventory' && (
-        <InventoryTable
-          inventory={inventory}
-          setInventory={setInventory}
-          onEdit={handleEdit}
-        />
-      )}
-      {activeTab === 'add' && (
-        <AddItem
-          inventory={inventory}
-          setInventory={setInventory}
-          owners={owners}
-        />
-      )}
-      {activeTab === 'owners' && (
-        <OwnerProfiles
-          owners={owners}
-          setOwners={setOwners}
-          inventory={inventory}
-        />
-      )}
-      {activeTab === 'sales' && (
-        <SalesReport inventory={inventory} />
-      )}
-
-      {editItemIndex !== null && (
-        <EditItem
-          item={inventory[editItemIndex]}
-          index={editItemIndex}
-          onSave={handleSaveEdit}
-          onCancel={handleCancelEdit}
-        />
-      )}
+    <div className="overflow-x-auto">
+      <table className="min-w-full border border-gray-300">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="py-2 px-4 border-b">Image</th>
+            <th className="py-2 px-4 border-b">Name</th>
+            <th className="py-2 px-4 border-b">Price</th>
+            <th className="py-2 px-4 border-b">Category</th>
+            <th className="py-2 px-4 border-b">Owner</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, idx) => (
+            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+              <td className="py-2 px-4 border-b text-center">
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="h-16 mx-auto object-cover rounded" />
+                ) : (
+                  <span className="text-sm text-gray-400 italic">No image</span>
+                )}
+              </td>
+              <td className="py-2 px-4 border-b text-center">{item.name}</td>
+              <td className="py-2 px-4 border-b text-center">${item.price}</td>
+              <td className="py-2 px-4 border-b text-center">{item.category}</td>
+              <td className="py-2 px-4 border-b text-center">{item.owner}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
