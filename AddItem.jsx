@@ -1,89 +1,81 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { addItem, getOwners, storage } from './firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-export default function AddItem({ onAddItem }) {
+const ROOMS = ['Living Room', 'Bedroom', 'Kitchen', 'Dining Room', 'Office', 'Outdoor', 'Garage', 'Other'];
+
+export default function AddItem() {
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    category: '',
-    room: '',
-    owner: '',
-    images: []
+    name: '', description: '', price: '', category: '', room: '', owner: '', images: []
   });
+  const [owners, setOwners] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchOwners = async () => {
+      const data = await getOwners();
+      setOwners(data);
+    };
+    fetchOwners();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'images') {
-      setFormData({
-        ...formData,
-        images: [...files]
-      });
+      setFormData((prev) => ({ ...prev, images: Array.from(files) }));
     } else {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.price || !formData.owner) {
-      alert('Please fill all required fields.');
-      return;
+    const { name, price, owner, room, images } = formData;
+    if (!name || !price || !owner || !room) return alert('Required fields missing');
+    setLoading(true);
+
+    try {
+      const urls = [];
+      for (const file of images) {
+        const storageRef = ref(storage, `items/${Date.now()}-${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(snapshot.ref);
+        urls.push(url);
+      }
+      const itemData = { ...formData, images: urls, createdAt: Date.now() };
+      await addItem(itemData);
+      alert('Item added!');
+      setFormData({ name: '', description: '', price: '', category: '', room: '', owner: '', images: [] });
+    } catch (err) {
+      alert('Error uploading item');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    onAddItem(formData);
-    setFormData({
-      name: '',
-      description: '',
-      price: '',
-      category: '',
-      room: '',
-      owner: '',
-      images: []
-    });
   };
 
   return (
-    <div className="max-w-xl mx-auto bg-white shadow-md rounded p-6 mt-6">
-      <h2 className="text-xl font-semibold mb-4 text-center">Add New Item</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block mb-1">Name <span className="text-red-500">*</span></label>
-          <input name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border rounded" />
-        </div>
-        <div>
-          <label className="block mb-1">Description</label>
-          <textarea name="description" value={formData.description} onChange={handleChange} className="w-full px-3 py-2 border rounded" />
-        </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block mb-1">Price <span className="text-red-500">*</span></label>
-            <input name="price" value={formData.price} onChange={handleChange} type="number" step="0.01" className="w-full px-3 py-2 border rounded" />
-          </div>
-          <div className="flex-1">
-            <label className="block mb-1">Category</label>
-            <input name="category" value={formData.category} onChange={handleChange} className="w-full px-3 py-2 border rounded" />
-          </div>
-        </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block mb-1">Room</label>
-            <input name="room" value={formData.room} onChange={handleChange} className="w-full px-3 py-2 border rounded" />
-          </div>
-          <div className="flex-1">
-            <label className="block mb-1">Owner <span className="text-red-500">*</span></label>
-            <input name="owner" value={formData.owner} onChange={handleChange} className="w-full px-3 py-2 border rounded" />
-          </div>
-        </div>
-        <div>
-          <label className="block mb-1">Upload Images (up to 10)</label>
-          <input name="images" type="file" multiple accept="image/*" onChange={handleChange} className="w-full px-3 py-2 border rounded" />
-        </div>
-        <button type="submit" className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
-          Add Item
-        </button>
-      </form>
-    </div>
+    <form className="p-4 space-y-4" onSubmit={handleSubmit}>
+      <input name="name" value={formData.name} onChange={handleChange} placeholder="Item Name" className="w-full p-2 border rounded" required />
+      <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" className="w-full p-2 border rounded" />
+      <input name="price" value={formData.price} onChange={handleChange} placeholder="Price" type="number" className="w-full p-2 border rounded" required />
+      <input name="category" value={formData.category} onChange={handleChange} placeholder="Category" className="w-full p-2 border rounded" />
+
+      <select name="room" value={formData.room} onChange={handleChange} className="w-full p-2 border rounded" required>
+        <option value="">Select Room</option>
+        {ROOMS.map((r) => <option key={r} value={r}>{r}</option>)}
+      </select>
+
+      <select name="owner" value={formData.owner} onChange={handleChange} className="w-full p-2 border rounded" required>
+        <option value="">Select Owner</option>
+        {owners.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+      </select>
+
+      <input name="images" type="file" onChange={handleChange} multiple className="w-full p-2 border rounded" />
+
+      <button disabled={loading} type="submit" className="bg-blue-500 text-white py-2 px-4 rounded">
+        {loading ? 'Uploading...' : 'Add Item'}
+      </button>
+    </form>
   );
 }
