@@ -11,6 +11,7 @@ export default function AddItem() {
   const [owners, setOwners] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Fetch owner list from Firebase on mount
   useEffect(() => {
     const fetchOwners = async () => {
       const data = await getOwners();
@@ -19,6 +20,7 @@ export default function AddItem() {
     fetchOwners();
   }, []);
 
+  // Update form fields and store File objects
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'images') {
@@ -28,6 +30,7 @@ export default function AddItem() {
     }
   };
 
+  // Submit item, upload images, store in Firestore
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { name, price, owner, room, images } = formData;
@@ -56,23 +59,34 @@ export default function AddItem() {
 
   return (
     <form className="p-4 space-y-4" onSubmit={handleSubmit}>
+      {/* Item Name */}
       <input name="name" value={formData.name} onChange={handleChange} placeholder="Item Name" className="w-full p-2 border rounded" required />
+
+      {/* Description */}
       <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" className="w-full p-2 border rounded" />
+
+      {/* Price */}
       <input name="price" value={formData.price} onChange={handleChange} placeholder="Price" type="number" className="w-full p-2 border rounded" required />
+
+      {/* Category */}
       <input name="category" value={formData.category} onChange={handleChange} placeholder="Category" className="w-full p-2 border rounded" />
 
+      {/* Room Dropdown */}
       <select name="room" value={formData.room} onChange={handleChange} className="w-full p-2 border rounded" required>
         <option value="">Select Room</option>
         {ROOMS.map((r) => <option key={r} value={r}>{r}</option>)}
       </select>
 
+      {/* Owner Dropdown (loaded from Firebase) */}
       <select name="owner" value={formData.owner} onChange={handleChange} className="w-full p-2 border rounded" required>
         <option value="">Select Owner</option>
         {owners.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
       </select>
 
+      {/* Image Uploader */}
       <input name="images" type="file" onChange={handleChange} multiple className="w-full p-2 border rounded" />
 
+      {/* Submit Button */}
       <button disabled={loading} type="submit" className="bg-blue-500 text-white py-2 px-4 rounded">
         {loading ? 'Uploading...' : 'Add Item'}
       </button>
