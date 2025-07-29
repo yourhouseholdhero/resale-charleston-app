@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { addItemToDatabase, fetchOwners, fetchRooms } from './firebase';
 
+const STATUSES = ['In Inventory', 'Sold', 'Pending Pickup'];
+
 export default function AddItem() {
   const [imageFile, setImageFile] = useState(null);
-  const [formData, setFormData] = useState({ name: '', description: '', price: '', owner: '', room: '', status: 'In Inventory', dateSold: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', price: '', owner: '', room: '', status: STATUSES[0], dateSold: '' });
   const [aiLoading, setAiLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -60,6 +62,15 @@ export default function AddItem() {
   };
 
   const saveItem = async () => {
+    if (isNaN(parseFloat(formData.price))) {
+      alert('Price must be a number');
+      return;
+    }
+    if (formData.status === 'Sold' && !formData.dateSold) {
+      alert('Please select a sold date');
+      return;
+    }
+
     setSaving(true);
     try {
       await addItemToDatabase({
@@ -67,7 +78,7 @@ export default function AddItem() {
         imageUrl: previewUrl
       });
       alert('Item saved!');
-      setFormData({ name: '', description: '', price: '', owner: '', room: '', status: 'In Inventory', dateSold: '' });
+      setFormData({ name: '', description: '', price: '', owner: '', room: '', status: STATUSES[0], dateSold: '' });
       setImageFile(null);
       setPreviewUrl(null);
     } catch (err) {
@@ -102,9 +113,7 @@ export default function AddItem() {
       </select>
 
       <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="block w-full mb-2 p-2 border">
-        <option value="In Inventory">In Inventory</option>
-        <option value="Sold">Sold</option>
-        <option value="Pending Pickup">Pending Pickup</option>
+        {STATUSES.map((status, idx) => <option key={idx} value={status}>{status}</option>)}
       </select>
 
       <input type="date" value={formData.dateSold} onChange={(e) => setFormData({ ...formData, dateSold: e.target.value })} className="block w-full mb-4 p-2 border" />
