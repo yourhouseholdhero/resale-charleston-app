@@ -46,62 +46,7 @@ export default function OwnerProfile() {
   return (
     <div className="p-6">
       <button onClick={() => {
-        const filtered = items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate)));
-        const csv = ["Item,Status,Price,Payout,Date Sold"].concat(filtered.map(i => `${i.name},${i.status},${i.price},${i.payout},${i.dateSold || ''}`)).join('
-');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${ownerName}_items.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }} className="mb-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Export CSV</button>
-      <h1 className="text-2xl font-bold mb-1">{ownerName}'s Items</h1>
-      <p className="text-gray-600 mb-4">{totals.percentSold || 0}% sold</p>
-      <div className="mb-4 flex gap-4 flex-wrap">
-        <div>
-          <label className="block mb-1">Filter by status:</label>
-          <select value={filter} onChange={e => setFilter(e.target.value)} className="border p-2">
-            <option value="All">All</option>
-            <option value="Sold">Sold</option>
-            <option value="In Inventory">In Inventory</option>
-            <option value="Pending Pickup">Pending Pickup</option>
-          </select>
-        </div>
-        <div>
-          <label className="block mb-1">Start Date</label>
-          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border p-2" />
-        </div>
-        <div>
-          <label className="block mb-1">End Date</label>
-          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="border p-2" />
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1">Search items by name:</label>
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="border p-2 w-full max-w-md"
-          placeholder="Enter item name..."
-        />
-      </div>
-
-      <table className="w-full border">
-        <thead>
-          <tr className="border-b">
-            <th className="p-2 cursor-pointer" onClick={() => handleSort('name')}>Item</th>
-            <th className="p-2 cursor-pointer" onClick={() => handleSort('status')}>Status</th>
-            <th className="p-2 cursor-pointer" onClick={() => handleSort('price')}>Price</th>
-            <th className="p-2 cursor-pointer" onClick={() => handleSort('payout')}>Payout</th>
-            <th className="p-2 cursor-pointer" onClick={() => handleSort('dateSold')}>Date Sold</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate)) && (!search || i.name.toLowerCase().includes(search.toLowerCase()))).sort((a, b) => {
+        const filtered = items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate)) && (!search || i.name.toLowerCase().includes(search.toLowerCase()))).sort((a, b) => b.status !== 'Sold' ? -1 : a.payout > b.payout ? -1 : 1).sort((a, b) => {
             if (!sortKey) return a.status === 'Sold' ? 1 : -1;
             const valA = a[sortKey] || '';
             const valB = b[sortKey] || '';
