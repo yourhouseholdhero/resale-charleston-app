@@ -6,6 +6,7 @@ export default function InventoryPage() {
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [filter, setFilter] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -22,10 +23,27 @@ export default function InventoryPage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Delete ${selectedIds.length} selected items?`)) {
+      await Promise.all(selectedIds.map(deleteItem));
+      setItems(prev => prev.filter(item => !selectedIds.includes(item.id)));
+      setSelectedIds([]);
+    }
+  };
+
+  const handleCheckboxChange = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(filter.toLowerCase()) ||
     item.owner.toLowerCase().includes(filter.toLowerCase())
   );
+
+  const sortedItems = [...filteredItems].sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
 
   return (
     <div className="p-6">
@@ -37,12 +55,21 @@ export default function InventoryPage() {
         placeholder="Search by name or owner"
         className="mb-4 p-2 border w-full"
       />
+      {selectedIds.length > 0 && (
+        <button
+          onClick={handleBulkDelete}
+          className="mb-4 bg-red-600 text-white px-4 py-2 rounded"
+        >
+          Delete Selected ({selectedIds.length})
+        </button>
+      )}
       {selectedItem ? (
         <EditItem selectedItem={selectedItem} onClose={() => setSelectedItem(null)} />
       ) : (
         <table className="w-full border">
           <thead>
             <tr className="bg-gray-100">
+              <th className="p-2 border">Select</th>
               <th className="p-2 border">Image</th>
               <th className="p-2 border">Name</th>
               <th className="p-2 border">Owner</th>
@@ -52,11 +79,18 @@ export default function InventoryPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredItems.map(item => (
-              <tr key={item.id} className="border-t">
+            {sortedItems.map(item => (
+              <tr key={item.id} className="border-t transition duration-300 ease-in-out hover:bg-yellow-50">
+                <td className="p-2 border text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(item.id)}
+                    onChange={() => handleCheckboxChange(item.id)}
+                  />
+                </td>
                 <td className="p-2 border">
                   {item.images?.[0] ? (
-                    <img src={item.images[0]} alt="Item" className="w-20 h-20 object-cover" />
+                    <img src={item.images[0]} alt="Item" className="w-20 h-20 object-cover rounded" />
                   ) : (
                     <span className="text-gray-400">No image</span>
                   )}
