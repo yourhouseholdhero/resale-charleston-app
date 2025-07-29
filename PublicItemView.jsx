@@ -1,39 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { getItemById } from './firebase';
 
 export default function PublicItemView() {
-  const [params] = useSearchParams();
+  const { id } = useParams();
   const [item, setItem] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchItem = async () => {
-      const id = params.get('id');
-      if (!id) return;
-      try {
-        const data = await getItemById(id);
-        setItem(data);
-      } catch (err) {
-        console.error('Error loading item:', err);
-      } finally {
-        setLoading(false);
-      }
+      const data = await getItemById(id);
+      setItem(data);
     };
     fetchItem();
-  }, [params]);
+  }, [id]);
 
-  if (loading) return <div className="p-4">Loading...</div>;
-  if (!item) return <div className="p-4">Item not found.</div>;
+  if (!item) return <div className="p-6">Loading...</div>;
 
   return (
-    <div className="p-4 max-w-md mx-auto space-y-4 border rounded shadow">
-      <h1 className="text-xl font-bold">{item.name}</h1>
-      <p className="text-gray-700">{item.description}</p>
-      <p className="text-lg text-green-700 font-semibold">${item.price}</p>
-      {item.images?.length > 0 && (
-        <img src={item.images[0]} alt={item.name} className="w-full rounded" />
+    <div className="p-6 max-w-xl mx-auto text-center">
+      {item.images?.[0] && (
+        <img src={item.images[0]} alt="Item" className="w-full h-64 object-cover rounded mb-4" />
       )}
+      <h1 className="text-2xl font-bold mb-2">{item.name}</h1>
+      <p className="text-lg font-semibold text-green-700 mb-2">${item.price}</p>
+      <p className="text-gray-700 mb-4">{item.description}</p>
+      <p className="text-sm text-gray-400">Item ID: {item.id}</p>
     </div>
   );
 }
