@@ -10,6 +10,8 @@ export default function OwnerProfile() {
   const [items, setItems] = useState([]);
   const [totals, setTotals] = useState({ count: 0, total: 0, payout: 0 });
   const [filter, setFilter] = useState('All');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     async function fetchItems() {
@@ -31,14 +33,24 @@ export default function OwnerProfile() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">{ownerName}'s Items</h1>
-      <div className="mb-4">
-        <label className="block mb-1">Filter by status:</label>
-        <select value={filter} onChange={e => setFilter(e.target.value)} className="border p-2">
-          <option value="All">All</option>
-          <option value="Sold">Sold</option>
-          <option value="In Inventory">In Inventory</option>
-          <option value="Pending Pickup">Pending Pickup</option>
-        </select>
+      <div className="mb-4 flex gap-4 flex-wrap">
+        <div>
+          <label className="block mb-1">Filter by status:</label>
+          <select value={filter} onChange={e => setFilter(e.target.value)} className="border p-2">
+            <option value="All">All</option>
+            <option value="Sold">Sold</option>
+            <option value="In Inventory">In Inventory</option>
+            <option value="Pending Pickup">Pending Pickup</option>
+          </select>
+        </div>
+        <div>
+          <label className="block mb-1">Start Date</label>
+          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border p-2" />
+        </div>
+        <div>
+          <label className="block mb-1">End Date</label>
+          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="border p-2" />
+        </div>
       </div>
 
       <table className="w-full border">
@@ -52,7 +64,7 @@ export default function OwnerProfile() {
           </tr>
         </thead>
         <tbody>
-          {items.filter(i => filter === 'All' || i.status === filter).map((item, index) => (
+          {items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate))).map((item, index) => (
             <tr key={index} className="border-b">
               <td className="p-2">{item.name}</td>
               <td className="p-2">{item.status}</td>
