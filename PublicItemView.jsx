@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getItemById } from './firebase';
+import axios from 'axios';
 
 export default function PublicItemView() {
   const { id } = useParams();
   const [item, setItem] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [aiData, setAiData] = useState(null);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -13,6 +16,26 @@ export default function PublicItemView() {
     };
     fetchItem();
   }, [id]);
+
+  const generateAI = async () => {
+    if (!item?.images?.[0]) return;
+    setLoading(true);
+    try {
+      const response = await axios.post('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base', {
+        inputs: item.images[0]
+      }, {
+        headers: {
+          Authorization: `Bearer YOUR_HUGGINGFACE_TOKEN`,
+          'Content-Type': 'application/json'
+        }
+      });
+      setAiData(response.data[0].generated_text);
+    } catch (error) {
+      console.error('AI generation error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!item) return <div className="p-6">Loading...</div>;
 
@@ -25,6 +48,7 @@ export default function PublicItemView() {
       <p className="text-base md:text-lg font-semibold text-green-700 mb-2 print:text-black">${item.price}</p>
       <p className="text-sm md:text-base text-gray-700 mb-4 print:text-black">{item.description}</p>
       <p className="text-xs md:text-sm text-gray-500 mb-2 print:text-black">Room: {item.room}</p>
+
       {item.dateSold && (
         <div className="mt-4 text-left">
           <p className="text-md font-semibold text-blue-700 print:text-black">Sold Info</p>
@@ -33,7 +57,14 @@ export default function PublicItemView() {
           <p className="text-sm text-gray-600 print:text-black">Payment: {item.paymentType}</p>
         </div>
       )}
+
       <p className="text-xs md:text-sm text-gray-400 mt-6 print:text-black">Item ID: {item.id}</p>
+
+      <button onClick={generateAI} className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded" disabled={loading}>
+        {loading ? 'Generating Description...' : 'Generate AI Description'}
+      </button>
+
+      {aiData && <p className="mt-4 italic text-gray-600">AI Suggestion: {aiData}</p>}
     </div>
   );
 }
