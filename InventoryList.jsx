@@ -29,9 +29,19 @@ export default function InventoryList() {
   };
 
   const handleMarkSold = async (id) => {
-    if (window.confirm('Mark this item as sold?')) {
-      await markItemSold(id);
-      setItems(items.map(item => item.id === id ? { ...item, sold: true } : item));
+    const salePrice = prompt("Enter sale price:");
+    const payout = prompt("Enter payout to owner:");
+    const paymentType = prompt("Enter payment type (cash, card, etc.):");
+
+    if (salePrice && payout && paymentType) {
+      await markItemSold(id, {
+        sold: true,
+        dateSold: new Date().toISOString(),
+        salePrice: parseFloat(salePrice),
+        payout: parseFloat(payout),
+        paymentType,
+      });
+      setItems(items.map(item => item.id === id ? { ...item, sold: true, salePrice, payout, paymentType } : item));
     }
   };
 
@@ -57,6 +67,9 @@ export default function InventoryList() {
             <h3 className="font-bold text-lg">{item.name}</h3>
             <p className="text-gray-600">{item.description}</p>
             <p className="text-green-600 font-semibold">${item.price}</p>
+            {item.salePrice && <p className="text-sm text-blue-600">Sold for: ${item.salePrice}</p>}
+            {item.payout && <p className="text-sm text-purple-600">Payout: ${item.payout}</p>}
+            {item.paymentType && <p className="text-sm text-gray-700">Payment: {item.paymentType}</p>}
             {item.images?.[0] && (
               <img src={item.images[0]} alt={item.name} className="w-full rounded" />
             )}
