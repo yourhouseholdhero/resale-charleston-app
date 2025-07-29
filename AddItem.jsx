@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
-import { uploadImage, saveItem } from './firebase';
+import React, { useState, useEffect } from 'react';
+import { uploadImage, saveItem, getOwners, getRooms } from './firebase';
 
 export default function AddItem() {
   const [item, setItem] = useState({ name: '', description: '', price: '', owner: '', room: '' });
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [owners, setOwners] = useState([]);
+  const [rooms, setRooms] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const ownerList = await getOwners();
+      const roomList = await getRooms();
+      setOwners(ownerList);
+      setRooms(roomList);
+    };
+    fetchData();
+  }, []);
 
   const handleChange = (e) => {
     setItem({ ...item, [e.target.name]: e.target.value });
@@ -65,8 +77,17 @@ export default function AddItem() {
       <input name="name" value={item.name} onChange={handleChange} placeholder="Item Name" className="w-full border p-2" />
       <textarea name="description" value={item.description} onChange={handleChange} placeholder="Description" className="w-full border p-2" />
       <input name="price" value={item.price} onChange={handleChange} placeholder="Price" className="w-full border p-2" />
-      <input name="owner" value={item.owner} onChange={handleChange} placeholder="Owner" className="w-full border p-2" />
-      <input name="room" value={item.room} onChange={handleChange} placeholder="Room" className="w-full border p-2" />
+
+      <select name="owner" value={item.owner} onChange={handleChange} className="w-full border p-2">
+        <option value="">Select Owner</option>
+        {owners.map(owner => <option key={owner} value={owner}>{owner}</option>)}
+      </select>
+
+      <select name="room" value={item.room} onChange={handleChange} className="w-full border p-2">
+        <option value="">Select Room</option>
+        {rooms.map(room => <option key={room} value={room}>{room}</option>)}
+      </select>
+
       <input type="file" onChange={handleImageUpload} className="w-full" />
       <button type="button" onClick={handleAnalyze} className="bg-yellow-500 px-4 py-2 text-white rounded" disabled={loading}>Analyze Image</button>
       <button type="submit" className="bg-green-600 px-4 py-2 text-white rounded" disabled={loading}>Add Item</button>
