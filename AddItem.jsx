@@ -34,17 +34,23 @@ export default function AddItem() {
   };
 
   const handleGenerateAI = async () => {
-    setLoading(true);
-    const res = await fetch('/api/ai-describe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageUrl })
-    });
-    const data = await res.json();
-    setName(data.name);
-    setDescription(data.description);
-    setPrice(data.price);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await fetch('/api/ai-describe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl })
+      });
+      if (!res.ok) throw new Error('AI generation failed.');
+      const data = await res.json();
+      setName(data.name);
+      setDescription(data.description);
+      setPrice(data.price);
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
