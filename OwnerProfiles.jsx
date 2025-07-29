@@ -25,6 +25,7 @@ export default function OwnerProfile() {
         acc.payout += parseFloat(item.payout || 0);
         return acc;
       }, { count: 0, total: 0, payout: 0 });
+      summary.percentSold = Math.round((ownerItems.filter(i => i.status === 'Sold').length / ownerItems.length) * 100);
       setTotals(summary);
     }
     fetchItems();
@@ -32,7 +33,8 @@ export default function OwnerProfile() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">{ownerName}'s Items</h1>
+      <h1 className="text-2xl font-bold mb-1">{ownerName}'s Items</h1>
+      <p className="text-gray-600 mb-4">{totals.percentSold || 0}% sold</p>
       <div className="mb-4 flex gap-4 flex-wrap">
         <div>
           <label className="block mb-1">Filter by status:</label>
