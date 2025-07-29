@@ -40,6 +40,10 @@ export default function InventoryPage() {
     );
   };
 
+  const handleMarkSold = (item) => {
+    setSelectedItem({ ...item, markSold: true });
+  };
+
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(filter.toLowerCase()) ||
     item.owner.toLowerCase().includes(filter.toLowerCase())
@@ -118,6 +122,12 @@ export default function InventoryPage() {
                     className="bg-red-500 text-white px-3 py-1 rounded"
                   >
                     Delete
+                  </button>
+                  <button
+                    onClick={() => handleMarkSold(item)}
+                    className="bg-green-600 text-white px-3 py-1 rounded"
+                  >
+                    Mark Sold
                   </button>
                 </td>
               </tr>
