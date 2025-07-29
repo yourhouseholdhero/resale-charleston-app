@@ -109,7 +109,10 @@ export default function OwnerProfile() {
             return valA < valB ? 1 : -1;
           }).map((item, index) => (
             <tr key={index} className="border-b">
-              <td className="p-2">{item.name}</td>
+              <td className="p-2 flex gap-2 items-center">
+                {item.image && <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />}
+                {item.name}
+              </td>
               <td className="p-2">{item.status}</td>
               <td className="p-2">${item.price}</td>
               <td className="p-2">${item.payout}</td>
