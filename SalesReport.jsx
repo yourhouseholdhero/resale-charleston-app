@@ -35,12 +35,26 @@ export default function SalesReport() {
   if (loading) return <div className="p-6">
       <div className="mb-4 flex gap-4">
         <div>
-          <label className="block text-sm">Start Date</label>
-          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border p-2" />
+          <label className="block text-sm">Month</label>
+<select value={startDate} onChange={e => setStartDate(e.target.value)} className="border p-2">
+  <option value="">All</option>
+  {Array.from({length: 12}, (_, i) => {
+    const month = new Date(0, i).toLocaleString('default', { month: 'long' });
+    const val = `2024-${(i+1).toString().padStart(2, '0')}-01`;
+    return <option key={val} value={val}>{month}</option>;
+  })}
+</select> setStartDate(e.target.value)} className="border p-2" />
         </div>
         <div>
-          <label className="block text-sm">End Date</label>
-          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="border p-2" />
+          <label className="block text-sm">End Month</label>
+<select value={endDate} onChange={e => setEndDate(e.target.value)} className="border p-2">
+  <option value="">All</option>
+  {Array.from({length: 12}, (_, i) => {
+    const month = new Date(0, i).toLocaleString('default', { month: 'long' });
+    const val = `2024-${(i+1).toString().padStart(2, '0')}-28`;
+    return <option key={val} value={val}>{month}</option>;
+  })}
+</select> setEndDate(e.target.value)} className="border p-2" />
         </div>
       </div>Loading...</div>;
 
