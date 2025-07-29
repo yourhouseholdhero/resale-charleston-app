@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { getItems, deleteItem } from './firebase';
 import EditItem from './EditItem';
+import { useNavigate } from 'react-router-dom';
 
 export default function InventoryPage() {
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [filter, setFilter] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -90,7 +92,12 @@ export default function InventoryPage() {
                 </td>
                 <td className="p-2 border">
                   {item.images?.[0] ? (
-                    <img src={item.images[0]} alt="Item" className="w-20 h-20 object-cover rounded" />
+                    <img
+                      src={item.images[0]}
+                      alt="Item"
+                      className="w-20 h-20 object-cover rounded cursor-pointer"
+                      onClick={() => navigate(`/item/${item.id}`)}
+                    />
                   ) : (
                     <span className="text-gray-400">No image</span>
                   )}
