@@ -45,10 +45,16 @@ export default function OwnerProfile() {
 
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const handleEdit = (item) => {
+  const handleEdit = async (item) => {
     const updated = prompt('Update price:', item.price);
     if (updated !== null) {
-      setItems(prev => prev.map(i => i === item ? { ...i, price: updated } : i));
+      const updatedItem = { ...item, price: updated };
+      const snapshot = await getDocs(collection(db, 'items'));
+      const target = snapshot.docs.find(doc => doc.data().id === item.id);
+      if (target) {
+        await target.ref.update(updatedItem);
+        setItems(prev => prev.map(i => i.id === item.id ? updatedItem : i));
+      }
     }
   };
 
@@ -99,6 +105,38 @@ export default function OwnerProfile() {
             <p><strong>Payout:</strong> ${selectedItem.payout}</p>
             <p><strong>Description:</strong> {selectedItem.description}</p>
             <p><strong>Date Sold:</strong> {selectedItem.dateSold || '-'}</p>
+            <div className="mt-4 flex gap-4">
+              <button
+                onClick={async () => {
+                  const snapshot = await getDocs(collection(db, 'items'));
+                  const ref = snapshot.docs.find(doc => doc.data().id === selectedItem.id)?.ref;
+                  if (ref) {
+                    await ref.update({ status: 'Sold', dateSold: new Date().toISOString().split('T')[0] });
+                    setItems(prev => prev.map(i => i.id === selectedItem.id ? { ...i, status: 'Sold', dateSold: new Date().toISOString().split('T')[0] } : i));
+                    setSelectedItem(null);
+                  }
+                }}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+              >
+                Mark as Sold
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirm('Are you sure you want to delete this item?')) {
+                    const snapshot = await getDocs(collection(db, 'items'));
+                    const ref = snapshot.docs.find(doc => doc.data().id === selectedItem.id)?.ref;
+                    if (ref) {
+                      await ref.delete();
+                      setItems(prev => prev.filter(i => i.id !== selectedItem.id));
+                      setSelectedItem(null);
+                    }
+                  }
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+              >
+                Delete Item
+              </button>
+            </div>
           </div>
         </div>
       )}
