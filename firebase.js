@@ -62,6 +62,8 @@ export default function AddItem() {
   };
 
   const saveItem = async () => {
+    if (!window.confirm('Are you sure you want to save this item?')) return;
+    const backup = { ...formData, imageUrl: previewUrl };
     if (isNaN(parseFloat(formData.price))) {
       alert('Price must be a number');
       return;
@@ -77,7 +79,11 @@ export default function AddItem() {
         ...formData,
         imageUrl: previewUrl
       });
-      alert('Item saved!');
+      if (window.confirm('Item saved! Undo?')) {
+        setFormData(backup);
+        setPreviewUrl(backup.imageUrl);
+        return;
+      }
       setFormData({ name: '', description: '', price: '', owner: '', room: '', status: STATUSES[0], dateSold: '' });
       setImageFile(null);
       setPreviewUrl(null);
