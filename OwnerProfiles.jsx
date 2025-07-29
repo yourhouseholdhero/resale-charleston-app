@@ -64,7 +64,7 @@ export default function OwnerProfile() {
           </tr>
         </thead>
         <tbody>
-          {items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate))).map((item, index) => (
+          {items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate))).sort((a, b) => (a.status === 'Sold' ? 1 : -1)).map((item, index) => (
             <tr key={index} className="border-b">
               <td className="p-2">{item.name}</td>
               <td className="p-2">{item.status}</td>
