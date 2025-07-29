@@ -11,14 +11,18 @@ export default function OwnerReports() {
       const grouped = {};
       data.forEach(item => {
         if (!item.sold || !item.owner) return;
-        if (filterDate && new Date(item.dateSold) < new Date(filterDate)) return;
-        if (!grouped[item.owner]) grouped[item.owner] = { items: [], totalSales: 0, totalPayouts: 0, count: 0 };
-        grouped[item.owner].items.push(item);
-        grouped[item.owner].totalSales += parseFloat(item.salePrice || 0);
-        grouped[item.owner].totalPayouts += parseFloat(item.payout || 0);
-        grouped[item.owner].count++;
+        const soldDate = new Date(item.dateSold);
+        if (filterDate && soldDate < new Date(filterDate)) return;
+        const month = `${soldDate.getFullYear()}-${String(soldDate.getMonth() + 1).padStart(2, '0')}`;
+        const ownerKey = `${item.owner}__${month}`;
+
+        if (!grouped[ownerKey]) grouped[ownerKey] = { owner: item.owner, month, items: [], totalSales: 0, totalPayouts: 0, count: 0 };
+        grouped[ownerKey].items.push(item);
+        grouped[ownerKey].totalSales += parseFloat(item.salePrice || 0);
+        grouped[ownerKey].totalPayouts += parseFloat(item.payout || 0);
+        grouped[ownerKey].count++;
       });
-      setReports(Object.entries(grouped));
+      setReports(Object.values(grouped));
     };
     fetchAndGroup();
   }, [filterDate]);
@@ -35,9 +39,9 @@ export default function OwnerReports() {
           className="border p-2 rounded w-64"
         />
       </div>
-      {reports.map(([owner, report]) => (
-        <div key={owner} className="mb-6 border-b pb-4">
-          <h3 className="text-lg font-semibold">{owner}</h3>
+      {reports.map((report, index) => (
+        <div key={index} className="mb-6 border-b pb-4">
+          <h3 className="text-lg font-semibold">{report.owner} — {report.month}</h3>
           <p>Total Items Sold: {report.count}</p>
           <p>Total Sales: ${report.totalSales.toFixed(2)}</p>
           <p>Total Payouts: ${report.totalPayouts.toFixed(2)}</p>
