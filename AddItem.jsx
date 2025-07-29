@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { addItemToDatabase } from './firebase';
+import { addItemToDatabase, fetchOwners, fetchRooms } from './firebase';
 
 export default function AddItem() {
   const [imageFile, setImageFile] = useState(null);
-  const [formData, setFormData] = useState({ name: '', description: '', price: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', price: '', owner: '', room: '' });
   const [aiLoading, setAiLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [owners, setOwners] = useState([]);
+  const [rooms, setRooms] = useState([]);
+
+  useEffect(() => {
+    const loadOwnersAndRooms = async () => {
+      const ownersList = await fetchOwners();
+      const roomsList = await fetchRooms();
+      setOwners(ownersList);
+      setRooms(roomsList);
+    };
+    loadOwnersAndRooms();
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -32,11 +44,12 @@ export default function AddItem() {
           }
         });
         const caption = response.data[0].generated_text;
-        setFormData({
+        setFormData(prev => ({
+          ...prev,
           name: caption.split(' ').slice(0, 5).join(' '),
           description: caption,
           price: (Math.random() * 100 + 50).toFixed(2)
-        });
+        }));
       } catch (error) {
         console.error('AI error:', error);
       } finally {
@@ -54,7 +67,7 @@ export default function AddItem() {
         imageUrl: previewUrl
       });
       alert('Item saved!');
-      setFormData({ name: '', description: '', price: '' });
+      setFormData({ name: '', description: '', price: '', owner: '', room: '' });
       setImageFile(null);
       setPreviewUrl(null);
     } catch (err) {
@@ -76,7 +89,17 @@ export default function AddItem() {
 
       <input type="text" placeholder="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="block w-full mb-2 p-2 border" />
       <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="block w-full mb-2 p-2 border"></textarea>
-      <input type="text" placeholder="Price" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="block w-full mb-4 p-2 border" />
+      <input type="text" placeholder="Price" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="block w-full mb-2 p-2 border" />
+
+      <select value={formData.owner} onChange={(e) => setFormData({ ...formData, owner: e.target.value })} className="block w-full mb-2 p-2 border">
+        <option value="">Select Owner</option>
+        {owners.map((owner, idx) => <option key={idx} value={owner}>{owner}</option>)}
+      </select>
+
+      <select value={formData.room} onChange={(e) => setFormData({ ...formData, room: e.target.value })} className="block w-full mb-4 p-2 border">
+        <option value="">Select Room</option>
+        {rooms.map((room, idx) => <option key={idx} value={room}>{room}</option>)}
+      </select>
 
       <button onClick={saveItem} disabled={saving} className="bg-green-600 text-white px-4 py-2 rounded">
         {saving ? 'Saving...' : 'Save Item'}
