@@ -13,8 +13,10 @@ export default function AddItem() {
   const [price, setPrice] = useState('');
   const [owner, setOwner] = useState('');
   const [room, setRoom] = useState('');
+  const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [owners, setOwners] = useState([]);
+  const [highlight, setHighlight] = useState({ name: false, description: false, price: false });
 
   useEffect(() => {
     const fetchOwners = async () => {
@@ -43,11 +45,17 @@ export default function AddItem() {
       });
       if (!res.ok) throw new Error('AI generation failed.');
       const data = await res.json();
-      setName(data.name);
-      setDescription(data.description);
-      setPrice(data.price);
+      setName(data.name || '');
+      setDescription(data.description || '');
+      setPrice(data.price || '');
+      setCategory(data.category || '');
+      setHighlight({
+        name: !data.name,
+        description: !data.description,
+        price: !data.price
+      });
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      alert(`Error: ${err.message}\nTry again or enter details manually.`);
     } finally {
       setLoading(false);
     }
@@ -59,6 +67,7 @@ export default function AddItem() {
       name,
       description,
       price,
+      category,
       image: imageUrl,
       owner,
       room,
@@ -69,10 +78,12 @@ export default function AddItem() {
     setName('');
     setDescription('');
     setPrice('');
+    setCategory('');
     setOwner('');
     setRoom('');
     setImageUrl('');
     setImage(null);
+    setHighlight({ name: false, description: false, price: false });
   };
 
   return (
@@ -99,9 +110,11 @@ export default function AddItem() {
 
       {loading && <div className="text-center text-gray-600">🔄 AI is working magic...</div>}
 
-      <input className="w-full mb-2 border p-2" value={name} onChange={e => setName(e.target.value)} placeholder="Item Name" />
-      <textarea className="w-full mb-2 border p-2" value={description} onChange={e => setDescription(e.target.value)} placeholder="Item Description" />
-      <input className="w-full mb-2 border p-2" value={price} onChange={e => setPrice(e.target.value)} placeholder="Price" />
+      <input className={`w-full mb-2 border p-2 ${highlight.name ? 'border-red-500' : ''}`} value={name} onChange={e => setName(e.target.value)} placeholder="Item Name" />
+      <textarea className={`w-full mb-2 border p-2 ${highlight.description ? 'border-red-500' : ''}`} value={description} onChange={e => setDescription(e.target.value)} placeholder="Item Description" />
+      <input className={`w-full mb-2 border p-2 ${highlight.price ? 'border-red-500' : ''}`} value={price} onChange={e => setPrice(e.target.value)} placeholder="Price" />
+
+      <input className="w-full mb-2 border p-2" value={category} onChange={e => setCategory(e.target.value)} placeholder="Category (e.g. Sofa, Dresser, etc.)" />
 
       <select className="w-full mb-2 border p-2" value={owner} onChange={e => setOwner(e.target.value)}>
         <option value="">Select Owner</option>
