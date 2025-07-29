@@ -1,4 +1,4 @@
-mport React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getItems } from './firebase';
 
 export default function OwnerReports() {
@@ -12,10 +12,11 @@ export default function OwnerReports() {
       data.forEach(item => {
         if (!item.sold || !item.owner) return;
         if (filterDate && new Date(item.dateSold) < new Date(filterDate)) return;
-        if (!grouped[item.owner]) grouped[item.owner] = { items: [], totalSales: 0, totalPayouts: 0 };
+        if (!grouped[item.owner]) grouped[item.owner] = { items: [], totalSales: 0, totalPayouts: 0, count: 0 };
         grouped[item.owner].items.push(item);
         grouped[item.owner].totalSales += parseFloat(item.salePrice || 0);
         grouped[item.owner].totalPayouts += parseFloat(item.payout || 0);
+        grouped[item.owner].count++;
       });
       setReports(Object.entries(grouped));
     };
@@ -37,6 +38,7 @@ export default function OwnerReports() {
       {reports.map(([owner, report]) => (
         <div key={owner} className="mb-6 border-b pb-4">
           <h3 className="text-lg font-semibold">{owner}</h3>
+          <p>Total Items Sold: {report.count}</p>
           <p>Total Sales: ${report.totalSales.toFixed(2)}</p>
           <p>Total Payouts: ${report.totalPayouts.toFixed(2)}</p>
           <ul className="mt-2 ml-4 list-disc text-sm text-gray-700">
