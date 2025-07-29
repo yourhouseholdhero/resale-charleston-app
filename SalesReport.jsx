@@ -12,6 +12,7 @@ export default function SalesReport() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     async function fetchItems() {
       const snapshot = await getDocs(collection(db, 'items'));
       const allItems = snapshot.docs.map(doc => doc.data());
@@ -30,7 +31,7 @@ export default function SalesReport() {
       setLoading(false);
     }
     fetchItems();
-  }, []);
+  }, [startDate, endDate]);
 
   if (loading) return <div className="p-6">
       <div className="mb-4 flex gap-4">
