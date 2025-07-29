@@ -1,95 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { addItem, getOwners, storage } from './firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
-const ROOMS = ['Living Room', 'Bedroom', 'Kitchen', 'Dining Room', 'Office', 'Outdoor', 'Garage', 'Other'];
+import React, { useState } from 'react';
+import { uploadImage, saveItem } from './firebase';
 
 export default function AddItem() {
-  const [formData, setFormData] = useState({
-    name: '', description: '', price: '', category: '', room: '', owner: '', images: []
-  });
-  const [owners, setOwners] = useState([]);
+  const [item, setItem] = useState({ name: '', description: '', price: '', owner: '', room: '' });
+  const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch owner list from Firebase on mount
-  useEffect(() => {
-    const fetchOwners = async () => {
-      const data = await getOwners();
-      setOwners(data);
-    };
-    fetchOwners();
-  }, []);
-
-  // Update form fields and store File objects
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'images') {
-      setFormData((prev) => ({ ...prev, images: Array.from(files) }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    setItem({ ...item, [e.target.name]: e.target.value });
   };
 
-  // Submit item, upload images, store in Firestore
+  const handleImageUpload = (e) => {
+    setImage(e.target.files[0]);
+  };
+
+  const handleAnalyze = async () => {
+    if (!image) return alert("Upload an image first");
+    setLoading(true);
+    const url = await uploadImage(image);
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer YOUR_OPENAI_API_KEY`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4-vision-preview",
+        messages: [
+          { role: "user", content: [
+            { type: "text", text: "Describe this furniture item. Estimate resale price." },
+            { type: "image_url", image_url: { url } }
+          ] }
+        ],
+        max_tokens: 300
+      })
+    });
+    const result = await response.json();
+    const text = result.choices[0].message.content;
+    const [nameLine, descriptionLine, priceLine] = text.split('\n');
+
+    setItem({
+      ...item,
+      name: nameLine.replace("Name:", '').trim(),
+      description: descriptionLine.replace("Description:", '').trim(),
+      price: priceLine.replace(/[^\d.]/g, '').trim()
+    });
+    setLoading(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { name, price, owner, room, images } = formData;
-    if (!name || !price || !owner || !room) return alert('Required fields missing');
     setLoading(true);
-
-    try {
-      const urls = [];
-      for (const file of images) {
-        const storageRef = ref(storage, `items/${Date.now()}-${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(snapshot.ref);
-        urls.push(url);
-      }
-      const itemData = { ...formData, images: urls, createdAt: Date.now() };
-      await addItem(itemData);
-      alert('Item added!');
-      setFormData({ name: '', description: '', price: '', category: '', room: '', owner: '', images: [] });
-    } catch (err) {
-      alert('Error uploading item');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    const imgUrl = image ? await uploadImage(image) : '';
+    await saveItem({ ...item, images: [imgUrl] });
+    alert("Item saved");
+    setLoading(false);
+    setItem({ name: '', description: '', price: '', owner: '', room: '' });
+    setImage(null);
   };
 
   return (
-    <form className="p-4 space-y-4" onSubmit={handleSubmit}>
-      {/* Item Name */}
-      <input name="name" value={formData.name} onChange={handleChange} placeholder="Item Name" className="w-full p-2 border rounded" required />
-
-      {/* Description */}
-      <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" className="w-full p-2 border rounded" />
-
-      {/* Price */}
-      <input name="price" value={formData.price} onChange={handleChange} placeholder="Price" type="number" className="w-full p-2 border rounded" required />
-
-      {/* Category */}
-      <input name="category" value={formData.category} onChange={handleChange} placeholder="Category" className="w-full p-2 border rounded" />
-
-      {/* Room Dropdown */}
-      <select name="room" value={formData.room} onChange={handleChange} className="w-full p-2 border rounded" required>
-        <option value="">Select Room</option>
-        {ROOMS.map((r) => <option key={r} value={r}>{r}</option>)}
-      </select>
-
-      {/* Owner Dropdown (loaded from Firebase) */}
-      <select name="owner" value={formData.owner} onChange={handleChange} className="w-full p-2 border rounded" required>
-        <option value="">Select Owner</option>
-        {owners.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-      </select>
-
-      {/* Image Uploader */}
-      <input name="images" type="file" onChange={handleChange} multiple className="w-full p-2 border rounded" />
-
-      {/* Submit Button */}
-      <button disabled={loading} type="submit" className="bg-blue-500 text-white py-2 px-4 rounded">
-        {loading ? 'Uploading...' : 'Add Item'}
-      </button>
+    <form onSubmit={handleSubmit} className="p-6 max-w-xl mx-auto space-y-4">
+      <input name="name" value={item.name} onChange={handleChange} placeholder="Item Name" className="w-full border p-2" />
+      <textarea name="description" value={item.description} onChange={handleChange} placeholder="Description" className="w-full border p-2" />
+      <input name="price" value={item.price} onChange={handleChange} placeholder="Price" className="w-full border p-2" />
+      <input name="owner" value={item.owner} onChange={handleChange} placeholder="Owner" className="w-full border p-2" />
+      <input name="room" value={item.room} onChange={handleChange} placeholder="Room" className="w-full border p-2" />
+      <input type="file" onChange={handleImageUpload} className="w-full" />
+      <button type="button" onClick={handleAnalyze} className="bg-yellow-500 px-4 py-2 text-white rounded" disabled={loading}>Analyze Image</button>
+      <button type="submit" className="bg-green-600 px-4 py-2 text-white rounded" disabled={loading}>Add Item</button>
     </form>
   );
 }
