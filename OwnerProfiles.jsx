@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { app } from '../firebase';
 
@@ -65,6 +66,26 @@ export default function OwnerProfile() {
 
   return (
     <div className="p-6">
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Inventory Overview</h2>
+        <PieChart width={300} height={200}>
+          <Pie
+            dataKey="value"
+            isAnimationActive={false}
+            data={[{ name: 'Sold', value: items.filter(i => i.status === 'Sold').length }, { name: 'In Inventory', value: items.filter(i => i.status !== 'Sold').length }]}
+            cx="50%"
+            cy="50%"
+            outerRadius={60}
+            fill="#8884d8"
+            label
+          >
+            <Cell key="sold" fill="#34d399" />
+            <Cell key="inventory" fill="#60a5fa" />
+          </Pie>
+          <Tooltip />
+          <Legend />
+        </PieChart>
+      </div>
       <button onClick={() => {
         const filtered = items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate)) && (!search || i.name.toLowerCase().includes(search.toLowerCase()))).sort((a, b) => b.status !== 'Sold' ? -1 : a.payout > b.payout ? -1 : 1).sort((a, b) => {
             if (!sortKey) return a.status === 'Sold' ? 1 : -1;
