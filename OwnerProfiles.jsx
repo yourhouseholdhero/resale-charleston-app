@@ -1,115 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { addOwner, fetchOwners } from '../api';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { app } from '../firebase';
 
-const OwnerProfiles = () => {
-  const [owners, setOwners] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    percentSplit: '',
-  });
+const db = getFirestore(app);
+
+export default function OwnerProfile() {
+  const { ownerName } = useParams();
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
-    loadOwners();
-  }, []);
-
-  const loadOwners = async () => {
-    const data = await fetchOwners();
-    setOwners(data || []);
-  };
-
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleAddOwner = async () => {
-    await addOwner(formData);
-    setFormData({ firstName: '', lastName: '', email: '', phone: '', percentSplit: '' });
-    setShowForm(false);
-    loadOwners();
-  };
+    async function fetchItems() {
+      const snapshot = await getDocs(collection(db, 'items'));
+      const allItems = snapshot.docs.map(doc => doc.data());
+      const ownerItems = allItems.filter(item => item.owner === ownerName);
+      setItems(ownerItems);
+    }
+    fetchItems();
+  }, [ownerName]);
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Owner Profiles</h2>
-
-      <button
-        onClick={() => setShowForm(!showForm)}
-        className="mb-4 bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        {showForm ? 'Cancel' : 'Add Owner'}
-      </button>
-
-      {showForm && (
-        <div className="mb-6 p-4 bg-gray-100 rounded shadow">
-          <input
-            type="text"
-            name="firstName"
-            placeholder="First Name"
-            className="block mb-2 w-full p-2 border rounded"
-            value={formData.firstName}
-            onChange={handleInputChange}
-            required
-          />
-          <input
-            type="text"
-            name="lastName"
-            placeholder="Last Name"
-            className="block mb-2 w-full p-2 border rounded"
-            value={formData.lastName}
-            onChange={handleInputChange}
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            className="block mb-2 w-full p-2 border rounded"
-            value={formData.email}
-            onChange={handleInputChange}
-          />
-          <input
-            type="text"
-            name="phone"
-            placeholder="Phone Number"
-            className="block mb-2 w-full p-2 border rounded"
-            value={formData.phone}
-            onChange={handleInputChange}
-            required
-          />
-          <input
-            type="number"
-            name="percentSplit"
-            placeholder="Percent Split"
-            className="block mb-4 w-full p-2 border rounded"
-            value={formData.percentSplit}
-            onChange={handleInputChange}
-            required
-          />
-          <button
-            onClick={handleAddOwner}
-            className="bg-green-600 text-white px-4 py-2 rounded"
-          >
-            Save Owner
-          </button>
-        </div>
-      )}
-
-      <ul className="space-y-4">
-        {owners.map((owner, idx) => (
-          <li key={idx} className="p-4 border rounded shadow">
-            <strong>{owner.firstName} {owner.lastName}</strong><br />
-            Phone: {owner.phone}<br />
-            Email: {owner.email}<br />
-            Split: {owner.percentSplit}%
-          </li>
-        ))}
-      </ul>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">{ownerName}'s Items</h1>
+      <table className="w-full border">
+        <thead>
+          <tr className="border-b">
+            <th className="p-2">Item</th>
+            <th className="p-2">Status</th>
+            <th className="p-2">Price</th>
+            <th className="p-2">Payout</th>
+            <th className="p-2">Date Sold</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, index) => (
+            <tr key={index} className="border-b">
+              <td className="p-2">{item.name}</td>
+              <td className="p-2">{item.status}</td>
+              <td className="p-2">${item.price}</td>
+              <td className="p-2">${item.payout}</td>
+              <td className="p-2">{item.dateSold || '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
-};
-
-export default OwnerProfiles;
+}
