@@ -86,12 +86,12 @@ export default function AddItem() {
       )}
 
       {imageUrl && (
-        <button onClick={handleGenerateAI} className="bg-blue-600 text-white px-4 py-2 rounded mb-4">
-          Generate with AI
+        <button onClick={handleGenerateAI} disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded mb-4">
+          {loading ? 'Generating...' : 'Generate with AI'}
         </button>
       )}
 
-      {loading && <p className="text-center text-gray-600">Generating description...</p>}
+      {loading && <div className="text-center text-gray-600">🔄 AI is working magic...</div>}
 
       <input className="w-full mb-2 border p-2" value={name} onChange={e => setName(e.target.value)} placeholder="Item Name" />
       <textarea className="w-full mb-2 border p-2" value={description} onChange={e => setDescription(e.target.value)} placeholder="Item Description" />
