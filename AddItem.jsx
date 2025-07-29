@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
 import { app } from '../firebase';
+
+const db = getFirestore(app);
 
 export default function AddItem() {
   const [image, setImage] = useState(null);
@@ -8,7 +11,18 @@ export default function AddItem() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [owner, setOwner] = useState('');
+  const [room, setRoom] = useState('');
   const [loading, setLoading] = useState(false);
+  const [owners, setOwners] = useState([]);
+
+  useEffect(() => {
+    const fetchOwners = async () => {
+      const snapshot = await getDocs(collection(db, 'owners'));
+      setOwners(snapshot.docs.map(doc => doc.data().name));
+    };
+    fetchOwners();
+  }, []);
 
   const handleImageUpload = async (file) => {
     const storage = getStorage(app);
@@ -31,6 +45,28 @@ export default function AddItem() {
     setDescription(data.description);
     setPrice(data.price);
     setLoading(false);
+  };
+
+  const handleSubmit = async () => {
+    if (!name || !price || !imageUrl || !owner || !room) return alert('Missing fields!');
+    await addDoc(collection(db, 'items'), {
+      name,
+      description,
+      price,
+      image: imageUrl,
+      owner,
+      room,
+      status: 'In Inventory',
+      dateIntake: new Date().toISOString().split('T')[0]
+    });
+    alert('Item added!');
+    setName('');
+    setDescription('');
+    setPrice('');
+    setOwner('');
+    setRoom('');
+    setImageUrl('');
+    setImage(null);
   };
 
   return (
@@ -61,7 +97,22 @@ export default function AddItem() {
       <textarea className="w-full mb-2 border p-2" value={description} onChange={e => setDescription(e.target.value)} placeholder="Item Description" />
       <input className="w-full mb-2 border p-2" value={price} onChange={e => setPrice(e.target.value)} placeholder="Price" />
 
-      <button className="bg-green-600 text-white px-4 py-2 rounded">Add Item</button>
+      <select className="w-full mb-2 border p-2" value={owner} onChange={e => setOwner(e.target.value)}>
+        <option value="">Select Owner</option>
+        {owners.map((o, i) => <option key={i} value={o}>{o}</option>)}
+      </select>
+
+      <select className="w-full mb-4 border p-2" value={room} onChange={e => setRoom(e.target.value)}>
+        <option value="">Select Room</option>
+        <option value="Living Room">Living Room</option>
+        <option value="Bedroom">Bedroom</option>
+        <option value="Dining Room">Dining Room</option>
+        <option value="Office">Office</option>
+        <option value="Outdoor">Outdoor</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <button onClick={handleSubmit} className="bg-green-600 text-white px-4 py-2 rounded">Add Item</button>
     </div>
   );
 }
