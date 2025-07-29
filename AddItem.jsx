@@ -1,105 +1,64 @@
-import React, { useState, useEffect } from 'react';
-import { uploadImage, saveItem, getOwners, getRooms } from './firebase';
-import { Toaster, toast } from 'react-hot-toast';
+import React, { useState } from 'react';
+import axios from 'axios';
 
 export default function AddItem() {
-  const [item, setItem] = useState({ name: '', description: '', price: '', owner: '', room: '' });
-  const [image, setImage] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [owners, setOwners] = useState([]);
-  const [rooms, setRooms] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+  const [formData, setFormData] = useState({ name: '', description: '', price: '' });
+  const [aiLoading, setAiLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const ownerList = await getOwners();
-      const roomList = await getRooms();
-      setOwners(ownerList);
-      setRooms(roomList);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const generateAI = async () => {
+    if (!imageFile) return;
+    setAiLoading(true);
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const base64Image = reader.result;
+        const response = await axios.post('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base', {
+          inputs: base64Image
+        }, {
+          headers: {
+            Authorization: `Bearer YOUR_HUGGINGFACE_TOKEN`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const caption = response.data[0].generated_text;
+        setFormData({
+          name: caption.split(' ').slice(0, 5).join(' '),
+          description: caption,
+          price: (Math.random() * 100 + 50).toFixed(2)
+        });
+      } catch (error) {
+        console.error('AI error:', error);
+      } finally {
+        setAiLoading(false);
+      }
     };
-    fetchData();
-  }, []);
-
-  const handleChange = (e) => {
-    setItem({ ...item, [e.target.name]: e.target.value });
-  };
-
-  const handleImageUpload = (e) => {
-    setImage(e.target.files[0]);
-  };
-
-  const handleAnalyze = async () => {
-    if (!image) return toast.error("Upload an image first");
-    setLoading(true);
-    toast.loading("Analyzing image...");
-    const url = await uploadImage(image);
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer YOUR_OPENAI_API_KEY`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4-vision-preview",
-        messages: [
-          { role: "user", content: [
-            { type: "text", text: "Describe this furniture item. Estimate resale price." },
-            { type: "image_url", image_url: { url } }
-          ] }
-        ],
-        max_tokens: 300
-      })
-    });
-    const result = await response.json();
-    const text = result.choices[0].message.content;
-    const [nameLine, descriptionLine, priceLine] = text.split('\n');
-
-    setItem({
-      ...item,
-      name: nameLine.replace("Name:", '').trim(),
-      description: descriptionLine.replace("Description:", '').trim(),
-      price: priceLine.replace(/[^\d.]/g, '').trim()
-    });
-    toast.dismiss();
-    toast.success("AI description generated!");
-    setLoading(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    toast.loading("Saving item...");
-    const imgUrl = image ? await uploadImage(image) : '';
-    await saveItem({ ...item, images: [imgUrl] });
-    toast.dismiss();
-    toast.success("Item saved successfully!");
-    setLoading(false);
-    setItem({ name: '', description: '', price: '', owner: '', room: '' });
-    setImage(null);
+    reader.readAsDataURL(imageFile);
   };
 
   return (
-    <>
-      <Toaster position="top-center" />
-      <form onSubmit={handleSubmit} className="p-6 max-w-xl mx-auto space-y-4">
-        <input name="name" value={item.name} onChange={handleChange} placeholder="Item Name" className="w-full border p-2" />
-        <textarea name="description" value={item.description} onChange={handleChange} placeholder="Description" className="w-full border p-2" />
-        <input name="price" value={item.price} onChange={handleChange} placeholder="Price" className="w-full border p-2" />
+    <div className="p-6 max-w-xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Add New Item</h1>
+      <input type="file" accept="image/*" onChange={handleImageChange} className="mb-4" />
+      {previewUrl && <img src={previewUrl} alt="Preview" className="mb-4 w-full h-64 object-cover rounded" />}
 
-        <select name="owner" value={item.owner} onChange={handleChange} className="w-full border p-2">
-          <option value="">Select Owner</option>
-          {owners.map(owner => <option key={owner} value={owner}>{owner}</option>)}
-        </select>
+      <button onClick={generateAI} disabled={aiLoading} className="bg-blue-600 text-white px-4 py-2 rounded mb-4">
+        {aiLoading ? 'Analyzing Image...' : 'Generate Item Info'}
+      </button>
 
-        <select name="room" value={item.room} onChange={handleChange} className="w-full border p-2">
-          <option value="">Select Room</option>
-          {rooms.map(room => <option key={room} value={room}>{room}</option>)}
-        </select>
+      <input type="text" placeholder="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="block w-full mb-2 p-2 border" />
+      <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="block w-full mb-2 p-2 border"></textarea>
+      <input type="text" placeholder="Price" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="block w-full mb-4 p-2 border" />
 
-        <input type="file" onChange={handleImageUpload} className="w-full" />
-        <button type="button" onClick={handleAnalyze} className="bg-yellow-500 px-4 py-2 text-white rounded" disabled={loading}>Analyze Image</button>
-        <button type="submit" className="bg-green-600 px-4 py-2 text-white rounded" disabled={loading}>Add Item</button>
-      </form>
-    </>
+      <button className="bg-green-600 text-white px-4 py-2 rounded">Save Item</button>
+    </div>
   );
 }
