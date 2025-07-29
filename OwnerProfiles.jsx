@@ -13,6 +13,17 @@ export default function OwnerProfile() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortOrder('asc');
+    }
+  };
 
   useEffect(() => {
     async function fetchItems() {
@@ -82,15 +93,21 @@ export default function OwnerProfile() {
       <table className="w-full border">
         <thead>
           <tr className="border-b">
-            <th className="p-2">Item</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Price</th>
-            <th className="p-2">Payout</th>
-            <th className="p-2">Date Sold</th>
+            <th className="p-2 cursor-pointer" onClick={() => handleSort('name')}>Item</th>
+            <th className="p-2 cursor-pointer" onClick={() => handleSort('status')}>Status</th>
+            <th className="p-2 cursor-pointer" onClick={() => handleSort('price')}>Price</th>
+            <th className="p-2 cursor-pointer" onClick={() => handleSort('payout')}>Payout</th>
+            <th className="p-2 cursor-pointer" onClick={() => handleSort('dateSold')}>Date Sold</th>
           </tr>
         </thead>
         <tbody>
-          {items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate)) && (!search || i.name.toLowerCase().includes(search.toLowerCase()))).sort((a, b) => (a.status === 'Sold' ? 1 : -1)).map((item, index) => (
+          {items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate)) && (!search || i.name.toLowerCase().includes(search.toLowerCase()))).sort((a, b) => {
+            if (!sortKey) return a.status === 'Sold' ? 1 : -1;
+            const valA = a[sortKey] || '';
+            const valB = b[sortKey] || '';
+            if (sortOrder === 'asc') return valA > valB ? 1 : -1;
+            return valA < valB ? 1 : -1;
+          }).map((item, index) => (
             <tr key={index} className="border-b">
               <td className="p-2">{item.name}</td>
               <td className="p-2">{item.status}</td>
