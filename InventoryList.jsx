@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getItems } from './firebase';
+import { getItems, deleteItem, markItemSold } from './firebase';
 import QRCodeLabel from './QRCodeLabel';
 
 export default function InventoryList() {
@@ -20,6 +20,20 @@ export default function InventoryList() {
     fetchItems();
   }, []);
 
+  const handleDelete = async (id) => {
+    if (window.confirm('Delete this item permanently?')) {
+      await deleteItem(id);
+      setItems(items.filter(item => item.id !== id));
+    }
+  };
+
+  const handleMarkSold = async (id) => {
+    if (window.confirm('Mark this item as sold?')) {
+      await markItemSold(id);
+      setItems(items.map(item => item.id === id ? { ...item, sold: true } : item));
+    }
+  };
+
   if (loading) return <div className="p-4">Loading inventory...</div>;
   if (!items.length) return <div className="p-4">No items in inventory.</div>;
 
@@ -34,6 +48,10 @@ export default function InventoryList() {
             <img src={item.images[0]} alt={item.name} className="w-full rounded" />
           )}
           <QRCodeLabel itemId={item.id} />
+          <div className="flex space-x-2 pt-2">
+            <button onClick={() => handleMarkSold(item.id)} className="text-xs px-3 py-1 bg-yellow-500 text-white rounded">Mark Sold</button>
+            <button onClick={() => handleDelete(item.id)} className="text-xs px-3 py-1 bg-red-600 text-white rounded">Delete</button>
+          </div>
         </div>
       ))}
     </div>
