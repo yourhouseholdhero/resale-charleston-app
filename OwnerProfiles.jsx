@@ -54,6 +54,7 @@ export default function OwnerProfile() {
       if (target) {
         await target.ref.update(updatedItem);
         setItems(prev => prev.map(i => i.id === item.id ? updatedItem : i));
+      alert('Price updated successfully!');
       }
     }
   };
@@ -113,6 +114,7 @@ export default function OwnerProfile() {
                   if (ref) {
                     await ref.update({ status: 'Sold', dateSold: new Date().toISOString().split('T')[0] });
                     setItems(prev => prev.map(i => i.id === selectedItem.id ? { ...i, status: 'Sold', dateSold: new Date().toISOString().split('T')[0] } : i));
+                    alert('Item marked as sold!');
                     setSelectedItem(null);
                   }
                 }}
@@ -128,6 +130,7 @@ export default function OwnerProfile() {
                     if (ref) {
                       await ref.delete();
                       setItems(prev => prev.filter(i => i.id !== selectedItem.id));
+                      alert('Item deleted successfully!');
                       setSelectedItem(null);
                     }
                   }
