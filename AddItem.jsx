@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { app } from '../firebase';
 
 const db = getFirestore(app);
@@ -84,6 +84,20 @@ export default function AddItem() {
     setImageUrl('');
     setImage(null);
     setHighlight({ name: false, description: false, price: false });
+  };
+
+  // Admin functions (example template for later use)
+  const markItemAsSold = async (itemId) => {
+    const itemRef = doc(db, 'items', itemId);
+    await updateDoc(itemRef, {
+      status: 'Sold',
+      dateSold: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const deleteItem = async (itemId) => {
+    const itemRef = doc(db, 'items', itemId);
+    await deleteDoc(itemRef);
   };
 
   return (
