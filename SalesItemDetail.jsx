@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '../firebase';
 
@@ -31,7 +31,7 @@ export default function SalesItemDetail() {
       <img src={item.image} alt={item.name} className="w-full h-60 object-cover rounded mb-4" />
       <p><strong>Description:</strong> {item.description}</p>
       <p><strong>Price:</strong> ${item.price}</p>
-      <p><strong>Owner:</strong> {item.owner}</p>
+      <p><strong>Owner:</strong> <Link to={`/owner/${item.owner}`} className="text-blue-600 underline">{item.owner}</Link></p>
       <p><strong>Room:</strong> {item.room}</p>
       <p><strong>Status:</strong> {item.status}</p>
       <p><strong>Date Sold:</strong> {item.dateSold || 'N/A'}</p>
