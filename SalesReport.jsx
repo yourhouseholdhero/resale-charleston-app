@@ -10,6 +10,7 @@ export default function SalesReport() {
   const [items, setItems] = useState([]);
   const [report, setReport] = useState({});
   const [loading, setLoading] = useState(true);
+  const [grandTotal, setGrandTotal] = useState({ count: 0, total: 0, payout: 0 });
 
   useEffect(() => {
     setLoading(true);
@@ -19,45 +20,54 @@ export default function SalesReport() {
       const filtered = allItems.filter(i => i.status === 'Sold' && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate)));
 
       const summary = {};
+      let totalCount = 0;
+      let totalSum = 0;
+      let totalPayout = 0;
+
       filtered.forEach(item => {
         if (!summary[item.owner]) summary[item.owner] = { total: 0, payout: 0, count: 0 };
         summary[item.owner].count++;
         summary[item.owner].total += parseFloat(item.price || 0);
         summary[item.owner].payout += parseFloat(item.payout || 0);
+        totalCount++;
+        totalSum += parseFloat(item.price || 0);
+        totalPayout += parseFloat(item.payout || 0);
       });
 
       setItems(filtered);
       setReport(summary);
+      setGrandTotal({ count: totalCount, total: totalSum, payout: totalPayout });
       setLoading(false);
     }
     fetchItems();
   }, [startDate, endDate]);
 
   if (loading) return <div className="p-6">
-      <div className="mb-4 flex gap-4">
-        <div>
-          <label className="block text-sm">Month</label>
-<select value={startDate} onChange={e => setStartDate(e.target.value)} className="border p-2">
-  <option value="">All</option>
-  {Array.from({length: 12}, (_, i) => {
-    const month = new Date(0, i).toLocaleString('default', { month: 'long' });
-    const val = `2024-${(i+1).toString().padStart(2, '0')}-01`;
-    return <option key={val} value={val}>{month}</option>;
-  })}
-</select> setStartDate(e.target.value)} className="border p-2" />
-        </div>
-        <div>
-          <label className="block text-sm">End Month</label>
-<select value={endDate} onChange={e => setEndDate(e.target.value)} className="border p-2">
-  <option value="">All</option>
-  {Array.from({length: 12}, (_, i) => {
-    const month = new Date(0, i).toLocaleString('default', { month: 'long' });
-    const val = `2024-${(i+1).toString().padStart(2, '0')}-28`;
-    return <option key={val} value={val}>{month}</option>;
-  })}
-</select> setEndDate(e.target.value)} className="border p-2" />
-        </div>
-      </div>Loading...</div>;
+    <div className="mb-4 flex gap-4">
+      <div>
+        <label className="block text-sm">Start Month</label>
+        <select value={startDate} onChange={e => setStartDate(e.target.value)} className="border p-2">
+          <option value="">All</option>
+          {Array.from({ length: 12 }, (_, i) => {
+            const month = new Date(0, i).toLocaleString('default', { month: 'long' });
+            const val = `2024-${(i + 1).toString().padStart(2, '0')}-01`;
+            return <option key={val} value={val}>{month}</option>;
+          })}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm">End Month</label>
+        <select value={endDate} onChange={e => setEndDate(e.target.value)} className="border p-2">
+          <option value="">All</option>
+          {Array.from({ length: 12 }, (_, i) => {
+            const month = new Date(0, i).toLocaleString('default', { month: 'long' });
+            const val = `2024-${(i + 1).toString().padStart(2, '0')}-28`;
+            return <option key={val} value={val}>{month}</option>;
+          })}
+        </select>
+      </div>
+    </div>
+    Loading...</div>;
 
   return (
     <div className="p-6">
@@ -80,6 +90,12 @@ export default function SalesReport() {
               <td className="p-2">${data.payout.toFixed(2)}</td>
             </tr>
           ))}
+          <tr className="border-t font-bold">
+            <td className="p-2">TOTAL</td>
+            <td className="p-2">{grandTotal.count}</td>
+            <td className="p-2">${grandTotal.total.toFixed(2)}</td>
+            <td className="p-2">${grandTotal.payout.toFixed(2)}</td>
+          </tr>
         </tbody>
       </table>
     </div>
