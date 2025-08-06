@@ -1,6 +1,21 @@
+// src/components/AddItem.jsx
+
 import React, { useState, useEffect } from 'react';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from 'firebase/storage';
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc
+} from 'firebase/firestore';
 import { app } from '../firebase';
 
 const db = getFirestore(app);
@@ -63,17 +78,11 @@ export default function AddItem() {
 
   const handleSubmit = async () => {
     if (!name || !price || !imageUrl || !owner || !room) {
-      alert('Missing required fields.');
-      setHighlight({
-        name: !name,
-        description: !description,
-        price: !price
-      });
-      return;
+      return alert('Missing fields!');
     }
 
     try {
-      await addDoc(collection(db, 'items'), {
+      const newItem = {
         name,
         description,
         price,
@@ -83,9 +92,11 @@ export default function AddItem() {
         room,
         status: 'In Inventory',
         dateIntake: new Date().toISOString().split('T')[0]
-      });
+      };
 
-      alert('Item added successfully!');
+      await addDoc(collection(db, 'items'), newItem);
+      alert('Item added!');
+
       setName('');
       setDescription('');
       setPrice('');
@@ -95,9 +106,9 @@ export default function AddItem() {
       setImageUrl('');
       setImage(null);
       setHighlight({ name: false, description: false, price: false });
-    } catch (err) {
-      console.error('Error adding item:', err);
-      alert('Failed to add item.');
+
+    } catch (error) {
+      alert('Error adding item: ' + error.message);
     }
   };
 
@@ -105,11 +116,15 @@ export default function AddItem() {
     <div className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Add New Item</h1>
 
-      <input type="file" accept="image/*" onChange={(e) => {
-        const file = e.target.files[0];
-        setImage(file);
-        handleImageUpload(file);
-      }} />
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          setImage(file);
+          handleImageUpload(file);
+        }}
+      />
 
       {imageUrl && (
         <div className="my-4">
@@ -119,24 +134,61 @@ export default function AddItem() {
       )}
 
       {imageUrl && (
-        <button onClick={handleGenerateAI} disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded mb-4">
+        <button
+          onClick={handleGenerateAI}
+          disabled={loading}
+          className="bg-blue-600 text-white px-4 py-2 rounded mb-4"
+        >
           {loading ? 'Generating...' : 'Generate with AI'}
         </button>
       )}
 
       {loading && <div className="text-center text-gray-600">🔄 AI is working magic...</div>}
 
-      <input className={`w-full mb-2 border p-2 ${highlight.name ? 'border-red-500' : ''}`} value={name} onChange={e => setName(e.target.value)} placeholder="Item Name" />
-      <textarea className={`w-full mb-2 border p-2 ${highlight.description ? 'border-red-500' : ''}`} value={description} onChange={e => setDescription(e.target.value)} placeholder="Item Description" />
-      <input className={`w-full mb-2 border p-2 ${highlight.price ? 'border-red-500' : ''}`} value={price} onChange={e => setPrice(e.target.value)} placeholder="Price" />
-      <input className="w-full mb-2 border p-2" value={category} onChange={e => setCategory(e.target.value)} placeholder="Category" />
+      <input
+        className={`w-full mb-2 border p-2 ${highlight.name ? 'border-red-500' : ''}`}
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder="Item Name"
+      />
 
-      <select className="w-full mb-2 border p-2" value={owner} onChange={e => setOwner(e.target.value)}>
+      <textarea
+        className={`w-full mb-2 border p-2 ${highlight.description ? 'border-red-500' : ''}`}
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+        placeholder="Item Description"
+      />
+
+      <input
+        className={`w-full mb-2 border p-2 ${highlight.price ? 'border-red-500' : ''}`}
+        value={price}
+        onChange={e => setPrice(e.target.value)}
+        placeholder="Price"
+      />
+
+      <input
+        className="w-full mb-2 border p-2"
+        value={category}
+        onChange={e => setCategory(e.target.value)}
+        placeholder="Category (e.g. Sofa, Dresser, etc.)"
+      />
+
+      <select
+        className="w-full mb-2 border p-2"
+        value={owner}
+        onChange={e => setOwner(e.target.value)}
+      >
         <option value="">Select Owner</option>
-        {owners.map((o, i) => <option key={i} value={o}>{o}</option>)}
+        {owners.map((o, i) => (
+          <option key={i} value={o}>{o}</option>
+        ))}
       </select>
 
-      <select className="w-full mb-4 border p-2" value={room} onChange={e => setRoom(e.target.value)}>
+      <select
+        className="w-full mb-4 border p-2"
+        value={room}
+        onChange={e => setRoom(e.target.value)}
+      >
         <option value="">Select Room</option>
         <option value="Living Room">Living Room</option>
         <option value="Bedroom">Bedroom</option>
@@ -146,7 +198,12 @@ export default function AddItem() {
         <option value="Other">Other</option>
       </select>
 
-      <button onClick={handleSubmit} className="bg-green-600 text-white px-4 py-2 rounded">Add Item</button>
+      <button
+        onClick={handleSubmit}
+        className="bg-green-600 text-white px-4 py-2 rounded"
+      >
+        Add Item
+      </button>
     </div>
   );
 }
