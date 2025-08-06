@@ -62,8 +62,11 @@ export default function AddItem() {
   };
 
   const handleSubmit = async () => {
-    if (!name || !price || !imageUrl || !owner || !room) return alert('Missing fields!');
-    await addDoc(collection(db, 'items'), {
+    if (!name || !price || !imageUrl || !owner || !room) {
+      return alert('Missing fields!');
+    }
+
+    const docRef = await addDoc(collection(db, 'items'), {
       name,
       description,
       price,
@@ -74,6 +77,9 @@ export default function AddItem() {
       status: 'In Inventory',
       dateIntake: new Date().toISOString().split('T')[0]
     });
+
+    await updateDoc(docRef, { id: docRef.id });
+
     alert('Item added!');
     setName('');
     setDescription('');
@@ -86,7 +92,6 @@ export default function AddItem() {
     setHighlight({ name: false, description: false, price: false });
   };
 
-  // Admin functions (example template for later use)
   const markItemAsSold = async (itemId) => {
     const itemRef = doc(db, 'items', itemId);
     await updateDoc(itemRef, {
@@ -127,14 +132,11 @@ export default function AddItem() {
       <input className={`w-full mb-2 border p-2 ${highlight.name ? 'border-red-500' : ''}`} value={name} onChange={e => setName(e.target.value)} placeholder="Item Name" />
       <textarea className={`w-full mb-2 border p-2 ${highlight.description ? 'border-red-500' : ''}`} value={description} onChange={e => setDescription(e.target.value)} placeholder="Item Description" />
       <input className={`w-full mb-2 border p-2 ${highlight.price ? 'border-red-500' : ''}`} value={price} onChange={e => setPrice(e.target.value)} placeholder="Price" />
-
       <input className="w-full mb-2 border p-2" value={category} onChange={e => setCategory(e.target.value)} placeholder="Category (e.g. Sofa, Dresser, etc.)" />
-
       <select className="w-full mb-2 border p-2" value={owner} onChange={e => setOwner(e.target.value)}>
         <option value="">Select Owner</option>
         {owners.map((o, i) => <option key={i} value={o}>{o}</option>)}
       </select>
-
       <select className="w-full mb-4 border p-2" value={room} onChange={e => setRoom(e.target.value)}>
         <option value="">Select Room</option>
         <option value="Living Room">Living Room</option>
