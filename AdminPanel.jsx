@@ -1,10 +1,13 @@
+// src/components/AdminPanel.jsx
+
 import React, { useState } from 'react';
 import InventoryTable from './InventoryTable';
 import AddItem from './AddItem';
 import OwnerProfiles from './OwnerProfiles';
+import AdminDashboard from './AdminDashboard';
 
 export default function AdminPanel({ isAdmin }) {
-  const [selectedTab, setSelectedTab] = useState('Inventory');
+  const [selectedTab, setSelectedTab] = useState('Dashboard');
 
   if (!isAdmin) {
     return (
@@ -15,10 +18,20 @@ export default function AdminPanel({ isAdmin }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-6">
       <h2 className="text-2xl font-bold text-left mb-6">🛠️ Admin Control Panel</h2>
 
       <div className="flex justify-center mb-6 gap-2 flex-wrap">
+        <button
+          onClick={() => setSelectedTab('Dashboard')}
+          className={`px-4 py-2 rounded-md ${
+            selectedTab === 'Dashboard'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700'
+          }`}
+        >
+          Dashboard
+        </button>
         <button
           onClick={() => setSelectedTab('Inventory')}
           className={`px-4 py-2 rounded-md ${
@@ -52,6 +65,7 @@ export default function AdminPanel({ isAdmin }) {
       </div>
 
       <div className="bg-white rounded shadow p-6">
+        {selectedTab === 'Dashboard' && <AdminDashboard />}
         {selectedTab === 'Inventory' && <InventoryTable />}
         {selectedTab === 'AddItem' && <AddItem />}
         {selectedTab === 'OwnerProfiles' && <OwnerProfiles />}
