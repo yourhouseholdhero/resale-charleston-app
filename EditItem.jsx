@@ -20,6 +20,18 @@ const getCategoryColor = (category) => {
   return map[category] || 'bg-gray-100 text-gray-800';
 };
 
+const getRoomColor = (room) => {
+  const map = {
+    'Living Room': 'bg-orange-100 text-orange-800',
+    Bedroom: 'bg-pink-100 text-pink-800',
+    'Dining Room': 'bg-teal-100 text-teal-800',
+    Office: 'bg-indigo-100 text-indigo-800',
+    Outdoor: 'bg-green-100 text-green-800',
+    Other: 'bg-gray-200 text-gray-700'
+  };
+  return map[room] || 'bg-gray-100 text-gray-800';
+};
+
 export default function EditItem() {
   const { itemId } = useParams();
   const navigate = useNavigate();
@@ -28,6 +40,9 @@ export default function EditItem() {
   const [loading, setLoading] = useState(true);
   const [imageFile, setImageFile] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [roomList, setRoomList] = useState([
+    'Living Room', 'Bedroom', 'Dining Room', 'Office', 'Outdoor', 'Other'
+  ]);
 
   useEffect(() => {
     async function fetchData() {
@@ -36,6 +51,7 @@ export default function EditItem() {
       if (snap.exists()) {
         setItem({ id: snap.id, ...snap.data() });
       }
+
       const ownerSnap = await getDocs(collection(db, 'owners'));
       setOwners(ownerSnap.docs.map(doc => doc.data().name));
 
@@ -71,6 +87,7 @@ export default function EditItem() {
   if (!item) return <div className="p-6 text-red-600">Item not found.</div>;
 
   const isNewCategory = item.category && !categories.includes(item.category);
+  const isNewRoom = item.room && !roomList.includes(item.room);
 
   return (
     <div className="p-6 max-w-xl mx-auto">
@@ -118,19 +135,26 @@ export default function EditItem() {
         ))}
       </div>
 
-      <select
-        value={item.room}
+      <input
+        type="text"
+        value={item.room || ''}
         onChange={(e) => setItem({ ...item, room: e.target.value })}
-        className="w-full mb-2 border p-2"
-      >
-        <option value="">Select Room</option>
-        <option>Living Room</option>
-        <option>Bedroom</option>
-        <option>Dining Room</option>
-        <option>Office</option>
-        <option>Outdoor</option>
-        <option>Other</option>
-      </select>
+        className={`w-full mb-2 border p-2 ${isNewRoom ? 'border-red-500' : ''}`}
+        placeholder="Room"
+      />
+      {isNewRoom && <p className="text-sm text-red-500 mb-2">⚠️ This is a new room</p>}
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {roomList.map((r, i) => (
+          <button
+            key={i}
+            onClick={() => setItem({ ...item, room: r })}
+            className={`px-2 py-1 rounded text-sm ${getRoomColor(r)}`}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
 
       <select
         value={item.owner}
