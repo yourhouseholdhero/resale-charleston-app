@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { app } from '../firebase';
 
 const db = getFirestore(app);
@@ -27,6 +27,20 @@ export default function InventoryTable() {
       setSortKey(key);
       setSortOrder('asc');
     }
+  };
+
+  const deleteItem = async (id) => {
+    if (!confirm('Delete this item?')) return;
+    await deleteDoc(doc(db, 'items', id));
+    setItems(prev => prev.filter(i => i.id !== id));
+    setExpandedItemId(null);
+  };
+
+  const markItemSold = async (id) => {
+    const ref = doc(db, 'items', id);
+    const dateSold = new Date().toISOString().split('T')[0];
+    await updateDoc(ref, { status: 'Sold', dateSold });
+    setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'Sold', dateSold } : i));
   };
 
   const filteredItems = items
@@ -93,7 +107,7 @@ export default function InventoryTable() {
                         <p><strong>Description:</strong> {item.description}</p>
                         <p><strong>Category:</strong> {item.category}</p>
                         <p><strong>Room:</strong> {item.room}</p>
-                        <div className="mt-4 flex gap-2">
+                        <div className="mt-4 flex gap-2 flex-wrap">
                           <a
                             href={`/edit/${item.id}`}
                             className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded"
@@ -101,17 +115,19 @@ export default function InventoryTable() {
                             Edit
                           </a>
                           <button
-                            onClick={() => alert('Feature coming soon')}
+                            onClick={() => deleteItem(item.id)}
                             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
                           >
                             Delete
                           </button>
-                          <button
-                            onClick={() => alert('Feature coming soon')}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-                          >
-                            Mark Sold
-                          </button>
+                          {item.status !== 'Sold' && (
+                            <button
+                              onClick={() => markItemSold(item.id)}
+                              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                            >
+                              Mark Sold
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
