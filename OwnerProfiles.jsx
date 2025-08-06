@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { app } from '../firebase';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const db = getFirestore(app);
 
@@ -12,8 +14,8 @@ export default function OwnerProfile() {
   const [items, setItems] = useState([]);
   const [totals, setTotals] = useState({ count: 0, total: 0, payout: 0 });
   const [filter, setFilter] = useState('All');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('');
   const [sortOrder, setSortOrder] = useState('asc');
@@ -31,7 +33,7 @@ export default function OwnerProfile() {
   useEffect(() => {
     async function fetchItems() {
       const snapshot = await getDocs(collection(db, 'items'));
-      const allItems = snapshot.docs.map(doc => ({ ...doc.data(), ref: doc.ref }));
+      const allItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), ref: doc.ref }));
       const ownerItems = allItems.filter(item => item.owner === ownerName);
       setItems(ownerItems);
 
@@ -41,6 +43,7 @@ export default function OwnerProfile() {
         acc.payout += parseFloat(item.payout || 0);
         return acc;
       }, { count: 0, total: 0, payout: 0 });
+
       summary.percentSold = Math.round((ownerItems.filter(i => i.status === 'Sold').length / ownerItems.length) * 100);
       setTotals(summary);
     }
@@ -52,8 +55,8 @@ export default function OwnerProfile() {
   const sortedFilteredItems = items
     .filter(i =>
       (filter === 'All' || i.status === filter) &&
-      (!startDate || new Date(i.dateSold) >= new Date(startDate)) &&
-      (!endDate || new Date(i.dateSold) <= new Date(endDate)) &&
+      (!startDate || (i.dateSold && new Date(i.dateSold) >= startDate)) &&
+      (!endDate || (i.dateSold && new Date(i.dateSold) <= endDate)) &&
       (!search || i.name.toLowerCase().includes(search.toLowerCase()))
     )
     .sort((a, b) => {
@@ -85,6 +88,34 @@ export default function OwnerProfile() {
         </PieChart>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <select className="border p-2 rounded" value={filter} onChange={e => setFilter(e.target.value)}>
+          <option value="All">All</option>
+          <option value="Sold">Sold</option>
+          <option value="In Inventory">In Inventory</option>
+          <option value="Pending">Pending</option>
+        </select>
+        <DatePicker
+          selected={startDate}
+          onChange={setStartDate}
+          placeholderText="Start Date"
+          className="border p-2 rounded"
+        />
+        <DatePicker
+          selected={endDate}
+          onChange={setEndDate}
+          placeholderText="End Date"
+          className="border p-2 rounded"
+        />
+        <input
+          type="text"
+          placeholder="Search items..."
+          className="border p-2 rounded"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
       <table className="w-full text-left border">
         <thead>
           <tr className="border-b">
@@ -103,7 +134,7 @@ export default function OwnerProfile() {
                 {item.image && <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />}
                 {item.name}
               </td>
-              <td className="p-2">{item.status}</td>
+              <td className={`p-2 ${item.status === 'Sold' ? 'text-green-600' : item.status === 'Pending' ? 'text-yellow-600' : 'text-blue-600'}`}>{item.status}</td>
               <td className="p-2 text-blue-600 cursor-pointer" onClick={() => handleClickItem(item)}>${item.price}</td>
               <td className="p-2">${item.payout}</td>
               <td className="p-2">{item.dateSold || '-'}</td>
