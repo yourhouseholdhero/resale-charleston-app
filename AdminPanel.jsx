@@ -5,6 +5,7 @@ import InventoryTable from './InventoryTable';
 import AddItem from './AddItem';
 import OwnerProfiles from './OwnerProfiles';
 import AdminDashboard from './AdminDashboard';
+import ExportCSV from './ExportCSV';
 
 export default function AdminPanel({ isAdmin }) {
   const [selectedTab, setSelectedTab] = useState('Dashboard');
@@ -66,7 +67,14 @@ export default function AdminPanel({ isAdmin }) {
 
       <div className="bg-white rounded shadow p-6">
         {selectedTab === 'Dashboard' && <AdminDashboard />}
-        {selectedTab === 'Inventory' && <InventoryTable />}
+        {selectedTab === 'Inventory' && (
+          <>
+            <div className="flex justify-end mb-4">
+              <ExportCSV />
+            </div>
+            <InventoryTable />
+          </>
+        )}
         {selectedTab === 'AddItem' && <AddItem />}
         {selectedTab === 'OwnerProfiles' && <OwnerProfiles />}
       </div>
