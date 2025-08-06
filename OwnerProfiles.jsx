@@ -50,6 +50,26 @@ export default function OwnerProfile() {
     fetchItems();
   }, [ownerName]);
 
+  const exportCSV = () => {
+    const headers = ['Name', 'Status', 'Price', 'Payout', 'Date Sold', 'Description'];
+    const rows = sortedFilteredItems.map(i => [
+      i.name,
+      i.status,
+      i.price,
+      i.payout,
+      i.dateSold || '',
+      i.description || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(val => `"${val}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${ownerName}_items.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleClickItem = (item) => setSelectedItem(item);
 
   const sortedFilteredItems = items
@@ -68,45 +88,42 @@ export default function OwnerProfile() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Inventory Overview</h2>
-        <PieChart width={300} height={200}>
-          <Pie
-            dataKey="value"
-            isAnimationActive={false}
-            data={[
-              { name: 'Sold', value: items.filter(i => i.status === 'Sold').length },
-              { name: 'In Inventory', value: items.filter(i => i.status !== 'Sold').length }
-            ]}
-            cx="50%" cy="50%" outerRadius={60} fill="#8884d8" label
-          >
-            <Cell key="sold" fill="#34d399" />
-            <Cell key="inventory" fill="#60a5fa" />
-          </Pie>
-          <Tooltip />
-          <Legend />
-        </PieChart>
+      <div className="mb-6 flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Inventory Overview</h2>
+        <button
+          onClick={exportCSV}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+        >
+          Export CSV
+        </button>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-4">
+      <PieChart width={300} height={200}>
+        <Pie
+          dataKey="value"
+          isAnimationActive={false}
+          data={[
+            { name: 'Sold', value: items.filter(i => i.status === 'Sold').length },
+            { name: 'In Inventory', value: items.filter(i => i.status !== 'Sold').length }
+          ]}
+          cx="50%" cy="50%" outerRadius={60} fill="#8884d8" label
+        >
+          <Cell key="sold" fill="#34d399" />
+          <Cell key="inventory" fill="#60a5fa" />
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
+
+      <div className="my-4 flex flex-wrap gap-4">
         <select className="border p-2 rounded" value={filter} onChange={e => setFilter(e.target.value)}>
           <option value="All">All</option>
           <option value="Sold">Sold</option>
           <option value="In Inventory">In Inventory</option>
           <option value="Pending">Pending</option>
         </select>
-        <DatePicker
-          selected={startDate}
-          onChange={setStartDate}
-          placeholderText="Start Date"
-          className="border p-2 rounded"
-        />
-        <DatePicker
-          selected={endDate}
-          onChange={setEndDate}
-          placeholderText="End Date"
-          className="border p-2 rounded"
-        />
+        <DatePicker selected={startDate} onChange={setStartDate} placeholderText="Start Date" className="border p-2 rounded" />
+        <DatePicker selected={endDate} onChange={setEndDate} placeholderText="End Date" className="border p-2 rounded" />
         <input
           type="text"
           placeholder="Search items..."
@@ -135,7 +152,7 @@ export default function OwnerProfile() {
                 {item.name}
               </td>
               <td className={`p-2 ${item.status === 'Sold' ? 'text-green-600' : item.status === 'Pending' ? 'text-yellow-600' : 'text-blue-600'}`}>{item.status}</td>
-              <td className="p-2 text-blue-600 cursor-pointer" onClick={() => handleClickItem(item)}>${item.price}</td>
+              <td className="p-2 text-blue-600 cursor-pointer">${item.price}</td>
               <td className="p-2">${item.payout}</td>
               <td className="p-2">{item.dateSold || '-'}</td>
               <td className="p-2">
