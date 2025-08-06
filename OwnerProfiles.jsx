@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { app } from '../firebase';
@@ -8,6 +8,7 @@ const db = getFirestore(app);
 
 export default function OwnerProfile() {
   const { ownerName } = useParams();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [totals, setTotals] = useState({ count: 0, total: 0, payout: 0 });
   const [filter, setFilter] = useState('All');
@@ -16,6 +17,7 @@ export default function OwnerProfile() {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -29,9 +31,10 @@ export default function OwnerProfile() {
   useEffect(() => {
     async function fetchItems() {
       const snapshot = await getDocs(collection(db, 'items'));
-      const allItems = snapshot.docs.map(doc => doc.data());
+      const allItems = snapshot.docs.map(doc => ({ ...doc.data(), ref: doc.ref }));
       const ownerItems = allItems.filter(item => item.owner === ownerName);
       setItems(ownerItems);
+
       const summary = ownerItems.reduce((acc, item) => {
         acc.count++;
         acc.total += parseFloat(item.price || 0);
@@ -44,25 +47,21 @@ export default function OwnerProfile() {
     fetchItems();
   }, [ownerName]);
 
-  const [selectedItem, setSelectedItem] = useState(null);
+  const handleClickItem = (item) => setSelectedItem(item);
 
-  const handleEdit = async (item) => {
-    const updated = prompt('Update price:', item.price);
-    if (updated !== null) {
-      const updatedItem = { ...item, price: updated };
-      const snapshot = await getDocs(collection(db, 'items'));
-      const target = snapshot.docs.find(doc => doc.data().id === item.id);
-      if (target) {
-        await target.ref.update(updatedItem);
-        setItems(prev => prev.map(i => i.id === item.id ? updatedItem : i));
-      alert('Price updated successfully!');
-      }
-    }
-  };
-
-  const handleClickItem = (item) => {
-    setSelectedItem(item);
-  };
+  const sortedFilteredItems = items
+    .filter(i =>
+      (filter === 'All' || i.status === filter) &&
+      (!startDate || new Date(i.dateSold) >= new Date(startDate)) &&
+      (!endDate || new Date(i.dateSold) <= new Date(endDate)) &&
+      (!search || i.name.toLowerCase().includes(search.toLowerCase()))
+    )
+    .sort((a, b) => {
+      if (!sortKey) return a.status === 'Sold' ? 1 : -1;
+      const valA = a[sortKey] || '';
+      const valB = b[sortKey] || '';
+      return sortOrder === 'asc' ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+    });
 
   return (
     <div className="p-6">
@@ -72,12 +71,11 @@ export default function OwnerProfile() {
           <Pie
             dataKey="value"
             isAnimationActive={false}
-            data={[{ name: 'Sold', value: items.filter(i => i.status === 'Sold').length }, { name: 'In Inventory', value: items.filter(i => i.status !== 'Sold').length }]}
-            cx="50%"
-            cy="50%"
-            outerRadius={60}
-            fill="#8884d8"
-            label
+            data={[
+              { name: 'Sold', value: items.filter(i => i.status === 'Sold').length },
+              { name: 'In Inventory', value: items.filter(i => i.status !== 'Sold').length }
+            ]}
+            cx="50%" cy="50%" outerRadius={60} fill="#8884d8" label
           >
             <Cell key="sold" fill="#34d399" />
             <Cell key="inventory" fill="#60a5fa" />
@@ -86,23 +84,35 @@ export default function OwnerProfile() {
           <Legend />
         </PieChart>
       </div>
-      <button onClick={() => {
-        const filtered = items.filter(i => (filter === 'All' || i.status === filter) && (!startDate || new Date(i.dateSold) >= new Date(startDate)) && (!endDate || new Date(i.dateSold) <= new Date(endDate)) && (!search || i.name.toLowerCase().includes(search.toLowerCase()))).sort((a, b) => b.status !== 'Sold' ? -1 : a.payout > b.payout ? -1 : 1).sort((a, b) => {
-            if (!sortKey) return a.status === 'Sold' ? 1 : -1;
-            const valA = a[sortKey] || '';
-            const valB = b[sortKey] || '';
-            if (sortOrder === 'asc') return valA > valB ? 1 : -1;
-            return valA < valB ? 1 : -1;
-          }).map((item, index) => (
+
+      <table className="w-full text-left border">
+        <thead>
+          <tr className="border-b">
+            <th className="p-2 cursor-pointer" onClick={() => handleSort('name')}>Item</th>
+            <th className="p-2 cursor-pointer" onClick={() => handleSort('status')}>Status</th>
+            <th className="p-2 cursor-pointer" onClick={() => handleSort('price')}>Price</th>
+            <th className="p-2 cursor-pointer" onClick={() => handleSort('payout')}>Payout</th>
+            <th className="p-2">Date Sold</th>
+            <th className="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sortedFilteredItems.map((item, index) => (
             <tr key={index} className="border-b">
               <td className="p-2 flex gap-2 items-center cursor-pointer" onClick={() => handleClickItem(item)}>
                 {item.image && <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />}
                 {item.name}
               </td>
               <td className="p-2">{item.status}</td>
-              <td className="p-2 cursor-pointer text-blue-600" onClick={() => handleEdit(item)}>${item.price}</td>
+              <td className="p-2 text-blue-600 cursor-pointer" onClick={() => handleClickItem(item)}>${item.price}</td>
               <td className="p-2">${item.payout}</td>
               <td className="p-2">{item.dateSold || '-'}</td>
+              <td className="p-2">
+                <button className="text-sm bg-blue-500 text-white px-2 py-1 rounded"
+                  onClick={() => navigate(`/edit/${item.id}`)}>
+                  Edit
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -112,11 +122,12 @@ export default function OwnerProfile() {
             <td className="p-2">{totals.count}</td>
             <td className="p-2">${totals.total.toFixed(2)}</td>
             <td className="p-2">${totals.payout.toFixed(2)}</td>
-            <td></td>
+            <td colSpan="2"></td>
           </tr>
         </tfoot>
       </table>
-    {selectedItem && (
+
+      {selectedItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-xl max-w-lg w-full relative">
             <button onClick={() => setSelectedItem(null)} className="absolute top-2 right-2 text-gray-500">✖</button>
@@ -130,14 +141,12 @@ export default function OwnerProfile() {
             <div className="mt-4 flex gap-4">
               <button
                 onClick={async () => {
-                  const snapshot = await getDocs(collection(db, 'items'));
-                  const ref = snapshot.docs.find(doc => doc.data().id === selectedItem.id)?.ref;
-                  if (ref) {
-                    await ref.update({ status: 'Sold', dateSold: new Date().toISOString().split('T')[0] });
-                    setItems(prev => prev.map(i => i.id === selectedItem.id ? { ...i, status: 'Sold', dateSold: new Date().toISOString().split('T')[0] } : i));
-                    alert('Item marked as sold!');
-                    setSelectedItem(null);
-                  }
+                  await selectedItem.ref.update({
+                    status: 'Sold',
+                    dateSold: new Date().toISOString().split('T')[0]
+                  });
+                  setItems(prev => prev.map(i => i.id === selectedItem.id ? { ...i, status: 'Sold' } : i));
+                  setSelectedItem(null);
                 }}
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
               >
@@ -146,14 +155,9 @@ export default function OwnerProfile() {
               <button
                 onClick={async () => {
                   if (confirm('Are you sure you want to delete this item?')) {
-                    const snapshot = await getDocs(collection(db, 'items'));
-                    const ref = snapshot.docs.find(doc => doc.data().id === selectedItem.id)?.ref;
-                    if (ref) {
-                      await ref.delete();
-                      setItems(prev => prev.filter(i => i.id !== selectedItem.id));
-                      alert('Item deleted successfully!');
-                      setSelectedItem(null);
-                    }
+                    await selectedItem.ref.delete();
+                    setItems(prev => prev.filter(i => i.id !== selectedItem.id));
+                    setSelectedItem(null);
                   }
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
