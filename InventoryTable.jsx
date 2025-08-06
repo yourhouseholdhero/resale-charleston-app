@@ -1,79 +1,124 @@
-// src/components/InventoryTable.jsx
-
 import React, { useEffect, useState } from 'react';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { app } from '../firebase';
 
 const db = getFirestore(app);
 
-const getColorClass = (type, value) => {
-  const map = {
-    room: {
-      'Living Room': 'bg-orange-100 text-orange-800',
-      Bedroom: 'bg-pink-100 text-pink-800',
-      'Dining Room': 'bg-teal-100 text-teal-800',
-      Office: 'bg-indigo-100 text-indigo-800',
-      Outdoor: 'bg-green-100 text-green-800',
-      Other: 'bg-gray-200 text-gray-700',
-    },
-    category: {
-      Sofa: 'bg-yellow-100 text-yellow-800',
-      Dresser: 'bg-purple-100 text-purple-800',
-      Chair: 'bg-rose-100 text-rose-800',
-      Table: 'bg-lime-100 text-lime-800',
-      Shelf: 'bg-sky-100 text-sky-800',
-    },
-  };
-
-  return map[type]?.[value] || 'bg-gray-100 text-gray-700';
-};
-
 export default function InventoryTable() {
   const [items, setItems] = useState([]);
+  const [filterText, setFilterText] = useState('');
+  const [sortKey, setSortKey] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [expandedItemId, setExpandedItemId] = useState(null);
 
   useEffect(() => {
-    async function fetchItems() {
+    const fetchItems = async () => {
       const snapshot = await getDocs(collection(db, 'items'));
-      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setItems(docs);
-    }
+      const allItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setItems(allItems);
+    };
     fetchItems();
   }, []);
 
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortOrder('asc');
+    }
+  };
+
+  const filteredItems = items
+    .filter(i =>
+      i.name?.toLowerCase().includes(filterText.toLowerCase()) ||
+      i.owner?.toLowerCase().includes(filterText.toLowerCase()) ||
+      i.description?.toLowerCase().includes(filterText.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (!sortKey) return 0;
+      const valA = a[sortKey] || '';
+      const valB = b[sortKey] || '';
+      return sortOrder === 'asc'
+        ? valA > valB ? 1 : -1
+        : valA < valB ? 1 : -1;
+    });
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full border text-sm">
-        <thead className="bg-gray-100 text-left">
-          <tr>
-            <th className="p-2">Item</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Price</th>
-            <th className="p-2">Owner</th>
-            <th className="p-2">Room</th>
-            <th className="p-2">Category</th>
+    <div className="p-4 overflow-x-auto">
+      <h2 className="text-xl font-semibold mb-4">📦 Inventory List</h2>
+      <input
+        className="border p-2 mb-4 w-full md:w-1/2"
+        placeholder="Search by name, owner, or description..."
+        value={filterText}
+        onChange={e => setFilterText(e.target.value)}
+      />
+      <table className="w-full border-collapse bg-white shadow">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="p-2 text-left cursor-pointer" onClick={() => handleSort('name')}>Name</th>
+            <th className="p-2 text-left cursor-pointer" onClick={() => handleSort('owner')}>Owner</th>
+            <th className="p-2 text-left cursor-pointer" onClick={() => handleSort('price')}>Price</th>
+            <th className="p-2 text-left cursor-pointer" onClick={() => handleSort('status')}>Status</th>
+            <th className="p-2 text-left cursor-pointer" onClick={() => handleSort('dateSold')}>Date Sold</th>
+            <th className="p-2 text-center">Details</th>
           </tr>
         </thead>
         <tbody>
-          {items.map(item => (
-            <tr key={item.id} className="border-b hover:bg-gray-50">
-              <td className="p-2 flex items-center gap-2">
-                {item.image && <img src={item.image} alt="" className="w-10 h-10 rounded object-cover" />}
-                {item.name}
-              </td>
-              <td className="p-2">{item.status}</td>
-              <td className="p-2">${item.price}</td>
-              <td className="p-2">{item.owner}</td>
-              <td className="p-2">
-                <span className={`px-2 py-1 rounded text-xs font-semibold ${getColorClass('room', item.room)}`}>
-                  {item.room || '—'}
-                </span>
-              </td>
-              <td className="p-2">
-                <span className={`px-2 py-1 rounded text-xs font-semibold ${getColorClass('category', item.category)}`}>
-                  {item.category || '—'}
-                </span>
-              </td>
-            </tr>
+          {filteredItems.map(item => (
+            <React.Fragment key={item.id}>
+              <tr className="border-b">
+                <td className="p-2">{item.name}</td>
+                <td className="p-2">{item.owner}</td>
+                <td className="p-2">${item.price}</td>
+                <td className="p-2">{item.status}</td>
+                <td className="p-2">{item.dateSold || '-'}</td>
+                <td className="p-2 text-center">
+                  <button
+                    className="text-blue-600"
+                    onClick={() => setExpandedItemId(expandedItemId === item.id ? null : item.id)}
+                  >
+                    {expandedItemId === item.id ? '▲' : '▼'}
+                  </button>
+                </td>
+              </tr>
+              {expandedItemId === item.id && (
+                <tr>
+                  <td colSpan="6" className="bg-gray-50 p-4">
+                    <div className="flex flex-col md:flex-row gap-4 items-start">
+                      {item.image && (
+                        <img src={item.image} alt="Preview" className="w-40 h-40 object-cover rounded" />
+                      )}
+                      <div>
+                        <p><strong>Description:</strong> {item.description}</p>
+                        <p><strong>Category:</strong> {item.category}</p>
+                        <p><strong>Room:</strong> {item.room}</p>
+                        <div className="mt-4 flex gap-2">
+                          <a
+                            href={`/edit/${item.id}`}
+                            className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded"
+                          >
+                            Edit
+                          </a>
+                          <button
+                            onClick={() => alert('Feature coming soon')}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => alert('Feature coming soon')}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                          >
+                            Mark Sold
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
         </tbody>
       </table>
